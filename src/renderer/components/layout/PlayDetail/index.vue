@@ -2,7 +2,10 @@
 transition(enter-active-class="animated slideInRight" leave-active-class="animated slideOutDown" @after-enter="handleAfterEnter" @after-leave="handleAfterLeave")
   div(v-if="isShowPlayerDetail" :class="[$style.container, { fullscreen: isFullscreen }]" @contextmenu="handleContextMenu")
     div(:class="$style.bg")
-    //- div(:class="$style.bg" :style="bgStyle")
+      div(:class="$style.bgTheme")
+      div(v-if="bgStyle" :class="$style.bgCover" :style="bgStyle")
+      div(:class="$style.bgOverlay")
+      div(:class="$style.bgVignette")
     //- div(:class="$style.bg2")
     ControlBtnsLeftHeader(v-if="appSetting['common.controlBtnPosition'] == 'left'")
     ControlBtnsRightHeader(v-else)
@@ -10,7 +13,9 @@ transition(enter-active-class="animated slideInRight" leave-active-class="animat
       div.left(:class="$style.left")
         //- div(:class="$style.info")
         div(:class="$style.info")
-          img(v-if="musicInfo.pic" :class="$style.img" :src="musicInfo.pic")
+          div(:class="$style.coverFrame")
+            img(v-if="musicInfo.pic" :class="$style.img" :src="musicInfo.pic")
+            div(v-else :class="$style.imgPlaceholder")
           div.description(:class="['scroll', $style.description]")
             p {{ $t('player__music_name') }}{{ musicInfo.name }}
             p {{ $t('player__music_singer') }}{{ musicInfo.singer }}
@@ -27,7 +32,7 @@ transition(enter-active-class="animated slideInRight" leave-active-class="animat
 
 
 <script>
-import { ref, watch } from '@common/utils/vueTools'
+import { ref, watch, computed } from '@common/utils/vueTools'
 import { isFullscreen } from '@renderer/store'
 import {
   isShowPlayerDetail,
@@ -60,6 +65,12 @@ export default {
   },
   setup() {
     const visibled = ref(false)
+    const bgStyle = computed(() => {
+      if (!musicInfo.pic) return null
+      return {
+        backgroundImage: `url("${musicInfo.pic}")`,
+      }
+    })
 
     let clickTime = 0
 
@@ -104,6 +115,7 @@ export default {
       isShowPlayerDetail,
       isShowPlayComment,
       musicInfo,
+      bgStyle,
       hide,
       handleContextMenu,
       hideComment,
@@ -162,33 +174,40 @@ export default {
 }
 .bg {
   position: absolute;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+}
+.bgTheme,
+.bgCover,
+.bgOverlay,
+.bgVignette {
+  position: absolute;
+  inset: 0;
+}
+.bgTheme {
   background: var(--background-image) var(--background-image-position) no-repeat;
   background-size: var(--background-image-size);
-  // background-size: 110% 110%;
-  // filter: blur(60px);
-  opacity: .7;
-  z-index: -1;
-  &:before {
-    content: '';
-    display: block;
-    width: 100%;
-    height: 100%;
-    background-color: var(--color-app-background);
-  }
-  &:after {
-    position: absolute;
-    left: 0;
-    top: 0;
-    content: '';
-    display: block;
-    width: 100%;
-    height: 100%;
-    background-color: var(--color-main-background);
-  }
+  opacity: .42;
+}
+.bgCover {
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  filter: blur(42px) saturate(1.08);
+  transform: scale(1.16);
+  opacity: .82;
+  transition: opacity @transition-slow, transform @transition-slow;
+}
+.bgOverlay {
+  background:
+    linear-gradient(180deg, rgba(8, 10, 18, 0.34) 0%, rgba(8, 10, 18, 0.52) 100%),
+    color-mix(in srgb, var(--color-app-background) 84%, transparent);
+  backdrop-filter: blur(10px);
+}
+.bgVignette {
+  background:
+    radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, .08) 56%, rgba(0, 0, 0, .32) 100%);
 }
 // .bg2 {
 //   position: absolute;
@@ -234,7 +253,8 @@ export default {
   display: flex;
   flex-flow: column nowrap;
   align-items: center;
-  padding: 13px;
+  justify-content: center;
+  padding: 24px 13px;
   overflow: hidden;
   transition: flex-basis @transition-normal;
 }
@@ -243,26 +263,54 @@ export default {
   display: flex;
   flex-flow: column nowrap;
   justify-content: flex-start;
-  max-width: 300px;
+  width: min(100%, 360px);
   min-height: 0;
+}
+.coverFrame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 18px;
+  padding: 14px;
+  background: rgba(255, 255, 255, .08);
+  box-shadow:
+    0 22px 60px rgba(0, 0, 0, .22),
+    inset 0 1px 0 rgba(255, 255, 255, .12);
+  backdrop-filter: blur(10px);
+}
+.img,
+.imgPlaceholder {
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
 }
 .img {
-  max-width: 100%;
-  max-height: 80%;
-  min-width: 100%;
-  box-shadow: 0 0 6px var(--color-primary-alpha-500);
-  border-radius: 6px;
-  opacity: .8;
+  display: block;
+  object-fit: cover;
+  box-shadow: 0 18px 38px rgba(0, 0, 0, .28);
+}
+.imgPlaceholder {
+  background: linear-gradient(135deg, rgba(255, 255, 255, .1), rgba(255, 255, 255, .03));
+  border: 1px solid rgba(255, 255, 255, .08);
 }
 .description {
-  max-width: 300px;
-  margin-top: 15px;
-  padding-bottom: 15px;
+  max-width: 360px;
+  margin-top: 18px;
+  padding: 16px 18px 18px;
   min-height: 0;
+  border-radius: 16px;
+  background: rgba(8, 10, 18, .18);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08);
+  backdrop-filter: blur(12px);
   p {
-    line-height: 1.5;
+    line-height: 1.6;
     font-size: 14px;
     overflow-wrap: break-word;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, .2);
+
+    & + p {
+      margin-top: 8px;
+    }
   }
 }
 

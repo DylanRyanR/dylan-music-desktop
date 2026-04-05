@@ -201,58 +201,85 @@ export default {
   // padding: 0 30px;
   position: relative;
   transition: flex-basis @transition-normal;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 8% 2% 8% 6%;
+    border-radius: 30px;
+    background: linear-gradient(180deg, rgba(4, 7, 15, .1) 0%, rgba(4, 7, 15, .22) 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, .1),
+      0 18px 44px rgba(0, 0, 0, .16);
+    backdrop-filter: blur(16px);
+    pointer-events: none;
+    opacity: .9;
+  }
 }
 .lyric {
+  position: relative;
+  z-index: 1;
   text-align: center;
   height: 100%;
   overflow: hidden;
   font-size: var(--playDetail-lrc-font-size, 16px);
-  -webkit-mask-image: linear-gradient(transparent 0%, #fff 20%,  #fff 80%, transparent 100%);
+  -webkit-mask-image: linear-gradient(transparent 0%, rgba(255, 255, 255, .72) 14%, #fff 28%, #fff 72%, rgba(255, 255, 255, .72) 86%, transparent 100%);
   cursor: grab;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, .28);
   &.draging {
     cursor: grabbing;
   }
   :global {
     .font-lrc {
-      color: var(--color-450);
+      color: rgba(255, 255, 255, .72);
     }
     .line-content {
-      line-height: 1.2;
-      padding: calc(var(--playDetail-lrc-font-size, 16px) / 2) 1px;
+      line-height: 1.24;
+      padding: calc(var(--playDetail-lrc-font-size, 16px) / 2.2) 10px;
       overflow-wrap: break-word;
-      color: var(--color-450);
+      color: rgba(255, 255, 255, .72);
+      opacity: .92;
       transition: @transition-normal;
-      transition-property: padding;
+      transition-property: padding, opacity, transform, filter;
+      filter: saturate(.88);
 
       .extended {
-        font-size: 0.8em;
-        margin-top: 5px;
+        font-size: 0.82em;
+        margin-top: 6px;
+        opacity: .78;
       }
       &.line-mode {
         .font-lrc {
           transition: @transition-fast;
-          transition-property: font-size, color;
+          transition-property: font-size, color, opacity, text-shadow;
+        }
+      }
+      &.active {
+        opacity: 1;
+        transform: scale(1.02);
+        filter: saturate(1.08);
+
+        .font-lrc {
+          text-shadow:
+            0 0 22px rgba(255, 255, 255, .2),
+            0 3px 20px rgba(0, 0, 0, .34);
         }
       }
       &.line-mode.active .font-lrc, &.font-mode.played .font-lrc {
-        color: var(--color-primary-dark-200);
+        color: #fff;
       }
-      &.font-mode .extended .font-lrc {
-        transition: @transition-slow;
-        transition-property: font-size, color;
-      }
-
       &.font-mode > .line > .font-lrc {
         > span {
           transition: @transition-normal;
-          transition-property: font-size;
+          transition-property: font-size, background-size, filter;
           font-size: 1em;
           background-repeat: no-repeat;
-          background-color: var(--color-450);
-          background-image: -webkit-linear-gradient(top, var(--color-primary-dark-200), var(--color-primary-dark-200));
+          background-color: rgba(255, 255, 255, .72);
+          background-image: -webkit-linear-gradient(top, #fff, #fff);
           -webkit-text-fill-color: transparent;
           -webkit-background-clip: text;
           background-size: 0 100%;
+          filter: drop-shadow(0 3px 14px rgba(0, 0, 0, .22));
         }
       }
     }
@@ -274,10 +301,10 @@ export default {
     .line-content {
       &.active {
         .extended {
-          font-size: .94em;
+          font-size: .98em;
         }
         .line {
-          font-size: 1.1em;
+          font-size: 1.16em;
         }
       }
     }

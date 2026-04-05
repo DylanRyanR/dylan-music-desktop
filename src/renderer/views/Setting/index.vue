@@ -1,30 +1,40 @@
 <template>
   <div :class="$style.main">
     <div class="scroll" :class="$style.toc">
-      <ul :class="$style.tocList" role="toolbar">
-        <li v-for="h2 in tocList" :key="h2.id" :class="$style.tocListItem" role="presentation">
-          <h2
-            :class="[$style.tocH2, {[$style.active]: avtiveComponentName == h2.id }]"
-            role="tab" :aria-selected="avtiveComponentName == h2.id"
-            :aria-label="h2.title" ignore-tip @click="toggleTab(h2.id)"
-          >
-            <transition name="list-active">
-              <svg-icon v-if="avtiveComponentName == h2.id" name="angle-right-solid" :class="$style.activeIcon" />
-            </transition>
-            {{ h2.title }}
-          </h2>
-          <!-- <ul v-if="h2.children.length" :class="$style.tocList">
-            <li v-for="h3 in h2.children" :key="h3.id" :class="$style.tocSubListItem">
-              <h3 :class="[$style.tocH3, toc.activeId == h3.id ? $style.active : null]" :aria-label="h3.title">
-                <a :href="'#' + h3.id" @click.stop="toc.activeId = h3.id">{{ h3.title }}</a>
-              </h3>
-            </li>
-          </ul> -->
-        </li>
-      </ul>
+      <div :class="$style.tocInner">
+        <div :class="$style.tocHeader">
+          <p :class="$style.tocEyebrow">Settings</p>
+          <h1 :class="$style.tocTitle">{{ activeToc?.title || 'Settings' }}</h1>
+        </div>
+        <ul :class="$style.tocList" role="toolbar">
+          <li v-for="h2 in tocList" :key="h2.id" :class="$style.tocListItem" role="presentation">
+            <h2
+              :class="[$style.tocH2, {[$style.active]: avtiveComponentName == h2.id }]"
+              role="tab" :aria-selected="avtiveComponentName == h2.id"
+              :aria-label="h2.title" ignore-tip @click="toggleTab(h2.id)"
+            >
+              <transition name="list-active">
+                <svg-icon v-if="avtiveComponentName == h2.id" name="angle-right-solid" :class="$style.activeIcon" />
+              </transition>
+              {{ h2.title }}
+            </h2>
+            <!-- <ul v-if="h2.children.length" :class="$style.tocList">
+              <li v-for="h3 in h2.children" :key="h3.id" :class="$style.tocSubListItem">
+                <h3 :class="[$style.tocH3, toc.activeId == h3.id ? $style.active : null]" :aria-label="h3.title">
+                  <a :href="'#' + h3.id" @click.stop="toc.activeId = h3.id">{{ h3.title }}</a>
+                </h3>
+              </li>
+            </ul> -->
+          </li>
+        </ul>
+      </div>
     </div>
     <div ref="dom_content_ref" class="scroll" :class="$style.setting">
-      <dl>
+      <div :class="$style.settingHeader">
+        <p :class="$style.settingEyebrow">Current section</p>
+        <h2 :class="$style.settingTitle">{{ activeToc?.title || '' }}</h2>
+      </div>
+      <dl :class="$style.settingList">
         <component :is="avtiveComponentName" />
         <!-- <SettingBasic />
         <SettingPlay />
@@ -122,6 +132,7 @@ export default {
     const avtiveComponentName = ref(route.query.name && tocList.value.some(t => t.id == route.query.name)
       ? route.query.name
       : tocList.value[0].id)
+    const activeToc = computed(() => tocList.value.find(item => item.id == avtiveComponentName.value))
 
     const toggleTab = id => {
       avtiveComponentName.value = id
@@ -136,6 +147,7 @@ export default {
     return {
       tocList,
       avtiveComponentName,
+      activeToc,
       dom_content_ref,
       toggleTab,
     }
@@ -165,6 +177,7 @@ export default {
   //           title: h3.innerText.replace(/[（(].+?[)）]/, ''),
   //           id: h3.getAttribute('id'),
   //           dom: h3,
+  //           children: [],
   //         })
   //       }
   //     }
@@ -182,24 +195,69 @@ export default {
 @import '@renderer/assets/styles/layout.less';
 
 .main {
-  display: flex;
-  flex-flow: row nowrap;
+  display: grid;
+  grid-template-columns: minmax(210px, 240px) minmax(0, 1fr);
+  gap: 16px;
   height: 100%;
-  border-top: var(--color-list-header-border-bottom);
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.toc,
+.setting {
+  min-height: 0;
+  border-radius: @radius-border;
+  background: var(--color-primary-background);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
 }
 
 .toc {
-  flex: 0 0 16%;
-  overflow-y: scroll;
+  overflow-y: auto;
 }
+
+.tocInner {
+  padding: 14px 12px 12px;
+}
+
+.tocHeader {
+  padding: 2px 6px 14px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--color-list-header-border-bottom);
+}
+
+.tocEyebrow,
+.settingEyebrow {
+  font-size: 12px;
+  line-height: 1.4;
+  opacity: .6;
+}
+
+.tocTitle,
+.settingTitle {
+  margin-top: 6px;
+  font-size: 18px;
+  line-height: 1.35;
+  font-weight: 700;
+}
+
+.tocListItem + .tocListItem {
+  margin-top: 4px;
+}
+
 .tocH2 {
-  line-height: 1.5;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  line-height: 1.45;
   .mixin-ellipsis-1();
   font-size: 13px;
+  font-weight: 600;
   color: var(--color-font);
-  padding: 8px 10px;
+  padding: 9px 12px;
+  border-radius: @radius-border;
   transition: @transition-fast;
-  transition-property: background-color, color;
+  transition-property: background-color, color, opacity;
 
   &:not(.active) {
     cursor: pointer;
@@ -209,63 +267,71 @@ export default {
   }
   &.active {
     color: var(--color-primary);
+    background: var(--color-primary-background-hover);
   }
 }
+
 .activeIcon {
+  flex: none;
   height: .9em;
   width: .9em;
-  margin-left: -0.45em;
+  margin-left: -0.1em;
   vertical-align: -0.05em;
 }
-// .tocH3 {
-//   font-size: 13px;
-//   opacity: .8;
-// }
-
-// .tocList {
-//   .tocList {
-//     // padding-left: 15px;
-//   }
-// }
-// .tocSubListItem {
-//   padding-top: 10px;
-// }
 
 .setting {
-  padding: 0 15px 15px;
+  padding: 18px;
   font-size: 14px;
   box-sizing: border-box;
   overflow-y: auto;
-  height: 100%;
   position: relative;
   width: 100%;
+}
 
+.settingHeader {
+  padding: 4px 2px 18px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--color-list-header-border-bottom);
+}
+
+.settingList {
+  min-width: 0;
+}
+
+.setting {
   :global {
     dt {
-      border-left: 5px solid var(--color-primary-alpha-700);
-      padding: 3px 7px;
-      margin: 15px 0;
-
-      + dd h3 {
-        margin-top: 0;
-      }
+      padding: 0 0 10px;
+      margin: 0 0 14px;
+      border: none;
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1.4;
     }
 
     dd {
-      // margin-left: 15px;
-      // font-size: 13px;
-      > div {
-        padding: 0 15px;
+      margin: 0;
+      padding: 16px;
+      border-radius: @radius-border;
+      background: var(--color-primary-background-hover);
+
+      & + dd {
+        margin-top: 12px;
       }
 
+      > div {
+        padding: 0;
+      }
     }
     h3 {
-      font-size: 12px;
-      margin: 25px 0 15px;
+      font-size: 13px;
+      margin: 0 0 14px;
+      font-weight: 700;
+      line-height: 1.4;
     }
     .p {
       padding: 3px 0;
-      line-height: 1.3;
+      line-height: 1.5;
       .btn {
         + .btn {
           margin-left: 10px;
@@ -290,29 +356,4 @@ export default {
     }
   }
 }
-
-// .btn-content {
-//   display: inline-block;
-//   transition: @transition-theme;
-//   transition-property: opacity, transform;
-//   opacity: 1;
-//   transform: scale(1);
-
-//   &.hide {
-//     opacity: 0;
-//     transform: scale(0);
-//   }
-// }
-
-
-// :global(dt):target, :global(h3):target {
-//   animation: highlight 1s ease;
-// }
-
-// @keyframes highlight {
-//   from { background: yellow; }
-//   to { background: transparent; }
-// }
-
 </style>
-
