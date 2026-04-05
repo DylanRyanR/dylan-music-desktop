@@ -12,5 +12,5 @@ jobs:
         uses: peter-evans/repository-dispatch@v2
         with:
           token: ${{ secrets.PAT }}
-          repository: lyswhut/lx-music-desktop-version-info
+          repository: DylanRyanR/dylan-music-desktop
           event-type: npm-release
