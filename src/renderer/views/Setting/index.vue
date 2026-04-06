@@ -196,91 +196,125 @@ export default {
 
 .main {
   display: grid;
-  grid-template-columns: minmax(210px, 240px) minmax(0, 1fr);
-  gap: 16px;
+  grid-template-columns: minmax(224px, 260px) minmax(0, 1fr);
+  gap: 18px;
   height: 100%;
-  padding: 16px;
+  padding: 18px;
   box-sizing: border-box;
 }
 
 .toc,
 .setting {
   min-height: 0;
-  border-radius: @radius-border;
-  background: var(--color-primary-background);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+  border-radius: 20px;
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.10);
+  backdrop-filter: blur(14px);
 }
 
 .toc {
   overflow-y: auto;
+  background: color-mix(in srgb, var(--color-primary-background) 92%, rgba(255, 255, 255, .08));
+  border: 1px solid color-mix(in srgb, var(--color-list-header-border-bottom) 58%, transparent);
+}
+
+.setting {
+  background: color-mix(in srgb, var(--color-primary-background) 96%, rgba(255, 255, 255, .1));
+  border: 1px solid color-mix(in srgb, var(--color-list-header-border-bottom) 68%, transparent);
 }
 
 .tocInner {
-  padding: 14px 12px 12px;
+  padding: 18px 14px 14px;
 }
 
 .tocHeader {
-  padding: 2px 6px 14px;
-  margin-bottom: 8px;
-  border-bottom: 1px solid var(--color-list-header-border-bottom);
+  padding: 2px 8px 16px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-list-header-border-bottom) 74%, transparent);
 }
 
 .tocEyebrow,
 .settingEyebrow {
   font-size: 12px;
   line-height: 1.4;
-  opacity: .6;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  opacity: .58;
 }
 
 .tocTitle,
 .settingTitle {
-  margin-top: 6px;
-  font-size: 18px;
-  line-height: 1.35;
+  margin-top: 8px;
+  font-size: 20px;
+  line-height: 1.32;
   font-weight: 700;
 }
 
 .tocListItem + .tocListItem {
-  margin-top: 4px;
+  margin-top: 6px;
 }
 
 .tocH2 {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 8px;
-  min-height: 40px;
+  gap: 10px;
+  min-height: 44px;
   line-height: 1.45;
   .mixin-ellipsis-1();
   font-size: 13px;
   font-weight: 600;
   color: var(--color-font);
-  padding: 9px 12px;
-  border-radius: @radius-border;
+  padding: 10px 14px 10px 16px;
+  border-radius: 14px;
   transition: @transition-fast;
-  transition-property: background-color, color, opacity;
+  transition-property: background-color, color, opacity, transform, box-shadow;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 8px;
+    top: 10px;
+    bottom: 10px;
+    width: 3px;
+    border-radius: 999px;
+    background: transparent;
+    transition: @transition-fast;
+    transition-property: background-color, opacity;
+    opacity: 0;
+  }
 
   &:not(.active) {
     cursor: pointer;
     &:hover {
-      background-color: var(--color-button-background-hover);
+      background-color: color-mix(in srgb, var(--color-button-background-hover) 82%, transparent);
+      transform: translateX(1px);
     }
   }
   &.active {
     color: var(--color-primary);
-    background: var(--color-primary-background-hover);
+    background: color-mix(in srgb, var(--color-primary-background-hover) 82%, rgba(255, 255, 255, .08));
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, .08),
+      0 10px 22px rgba(0, 0, 0, .06);
+
+    &::before {
+      opacity: 1;
+      background: var(--color-primary);
+    }
   }
 }
 
 .activeIcon {
   flex: none;
-  height: .9em;
-  width: .9em;
-  margin-left: -0.1em;
+  height: .92em;
+  width: .92em;
+  margin-left: -0.05em;
   vertical-align: -0.05em;
+  opacity: .92;
 }
 
 .setting {
-  padding: 18px;
+  padding: 22px;
   font-size: 14px;
   box-sizing: border-box;
   overflow-y: auto;
@@ -289,9 +323,9 @@ export default {
 }
 
 .settingHeader {
-  padding: 4px 2px 18px;
-  margin-bottom: 18px;
-  border-bottom: 1px solid var(--color-list-header-border-bottom);
+  padding: 2px 4px 20px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-list-header-border-bottom) 76%, transparent);
 }
 
 .settingList {
@@ -301,22 +335,26 @@ export default {
 .setting {
   :global {
     dt {
-      padding: 0 0 10px;
-      margin: 0 0 14px;
+      padding: 0 0 12px;
+      margin: 0 0 16px;
       border: none;
-      font-size: 16px;
+      font-size: 17px;
       font-weight: 700;
       line-height: 1.4;
     }
 
     dd {
       margin: 0;
-      padding: 16px;
-      border-radius: @radius-border;
-      background: var(--color-primary-background-hover);
+      padding: 18px;
+      border-radius: 18px;
+      background: color-mix(in srgb, var(--color-primary-background-hover) 88%, rgba(255, 255, 255, .08));
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, .07),
+        0 12px 26px rgba(0, 0, 0, .05);
+      border: 1px solid color-mix(in srgb, var(--color-list-header-border-bottom) 56%, transparent);
 
       & + dd {
-        margin-top: 12px;
+        margin-top: 14px;
       }
 
       > div {
@@ -330,8 +368,9 @@ export default {
       line-height: 1.4;
     }
     .p {
-      padding: 3px 0;
-      line-height: 1.5;
+      padding: 4px 0;
+      line-height: 1.58;
+      color: color-mix(in srgb, var(--color-font) 84%, transparent);
       .btn {
         + .btn {
           margin-left: 10px;
@@ -341,19 +380,57 @@ export default {
 
     .help-btn {
       padding: 0;
-      margin: 0 0.4em;
+      margin: 0 0.28em;
+      width: 24px;
+      height: 24px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       border: none;
-      background: none;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--color-button-background-hover) 70%, transparent);
       color: var(--color-button-font);
       cursor: pointer;
-      transition: opacity 0.2s ease;
+      transition: @transition-fast;
+      transition-property: opacity, background-color, transform;
       &:hover {
-        opacity: 0.7;
+        opacity: 1;
+        transform: translateY(-1px);
+        background: color-mix(in srgb, var(--color-primary-background-hover) 72%, rgba(255, 255, 255, .08));
       }
     }
     .help-icon {
-      margin: 0 0.4em;
+      margin: 0 0.3em;
     }
+  }
+}
+
+@media (max-width: 900px) {
+  .main {
+    grid-template-columns: minmax(208px, 232px) minmax(0, 1fr);
+    gap: 14px;
+    padding: 14px;
+  }
+
+  .setting {
+    padding: 18px;
+  }
+}
+
+@media (max-width: 720px) {
+  .main {
+    grid-template-columns: 1fr;
+  }
+
+  .toc {
+    max-height: 240px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tocH2,
+  .help-btn {
+    transition: none;
   }
 }
 </style>

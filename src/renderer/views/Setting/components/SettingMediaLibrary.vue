@@ -3,16 +3,22 @@ dt#media_library {{ $t('my_list') }} Media
 
 dd
   .gap-top(:class="$style.sectionIntro")
-    p(:class="$style.sectionTitle") Media Library
+    .gap-top(:class="$style.sectionHeader")
+      div
+        p(:class="$style.eyebrow") Media Library
+        p(:class="$style.sectionTitle") Manage remote music sources
+      .gap-top(:class="$style.createActions")
+        base-btn.btn(min :disabled="isSaving || isScanningId != ''" @click="showCreate('smb')") Add SMB
+        base-btn.btn.gap-left(min :disabled="isSaving || isScanningId != ''" @click="showCreate('webdav')") Add WebDAV
     p(:class="$style.sectionDesc") Add SMB or WebDAV sources to scan and browse your music library by connection.
-    .gap-top(:class="$style.createActions")
-      base-btn.btn(min :disabled="isSaving || isScanningId != ''" @click="showCreate('smb')") Add SMB
-      base-btn.btn.gap-left(min :disabled="isSaving || isScanningId != ''" @click="showCreate('webdav')") Add WebDAV
 
 dd.gap-top
   div(:class="$style.formCard")
-    h3(:class="$style.cardTitle") {{ formTitle }}
-    p(:class="$style.cardDesc") {{ formDesc }}
+    .gap-top(:class="$style.cardHeader")
+      div
+        p(:class="$style.eyebrow") {{ isEditing ? 'Editing source' : 'Create source' }}
+        h3(:class="$style.cardTitle") {{ formTitle }}
+      p(:class="$style.cardDesc") {{ formDesc }}
 
     .gap-top(:class="$style.field")
       label(:class="$style.label" for="media_library_name") Name
@@ -67,7 +73,11 @@ dd.gap-top
       base-btn.btn.gap-left(min outline :disabled="isSaving" @click="cancel") {{ isEditing ? 'Cancel edit' : 'Reset' }}
 
 dd.gap-top
-  h3(:class="$style.listTitle") Connected Sources
+  .gap-top(:class="$style.listHeader")
+    div
+      p(:class="$style.eyebrow") Connections
+      h3(:class="$style.listTitle") Connected Sources
+    p(:class="$style.listDesc") Scan each connection independently and review the latest import summary below.
   template(v-if="connections.length")
     .gap-top(v-for="item in connections" :key="item.id" :class="$style.connectionCard")
       div(:class="$style.connectionHeader")
@@ -83,6 +93,7 @@ dd.gap-top
         base-btn.btn.gap-left(min outline :disabled="isSaving || isScanningId === item.id || isRemovingId === item.id" @click="remove(item.id)") {{ isRemovingId === item.id ? 'Removing...' : 'Remove' }}
   template(v-else)
     .gap-top(:class="$style.emptyState")
+      p(:class="$style.eyebrow") Empty state
       h4(:class="$style.emptyTitle") No media sources yet
       p(:class="$style.emptyDesc") Create an SMB or WebDAV connection first, then scan it to import your library.
 </template>
@@ -304,45 +315,90 @@ export default {
 <style lang="less" module>
 @import '@renderer/assets/styles/layout.less';
 
-.sectionIntro {
-  padding: 12px 14px;
-  border-radius: @radius-border;
-  background: var(--color-primary-background);
-}
-
-.sectionTitle {
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.sectionDesc {
-  margin-top: 6px;
+.eyebrow {
+  margin: 0;
   font-size: 12px;
-  opacity: .75;
-  line-height: 1.6;
+  line-height: 1.4;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  opacity: .58;
 }
 
-.createActions {
+.sectionIntro,
+.formCard,
+.connectionCard,
+.emptyState {
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--color-primary-background-hover) 88%, rgba(255, 255, 255, .08));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .07),
+    0 12px 26px rgba(0, 0, 0, .05);
+  border: 1px solid color-mix(in srgb, var(--color-list-header-border-bottom) 56%, transparent);
+}
+
+.sectionIntro {
+  padding: 18px;
+}
+
+.sectionHeader,
+.listHeader {
   display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
   flex-wrap: wrap;
 }
 
-.formCard {
-  padding: 14px;
-  border-radius: @radius-border;
-  background: var(--color-primary-background);
+.sectionTitle,
+.cardTitle,
+.listTitle,
+.emptyTitle {
+  margin: 8px 0 0;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.35;
 }
 
-.cardTitle {
-  font-size: 14px;
-  font-weight: 700;
+.sectionDesc,
+.cardDesc,
+.listDesc,
+.emptyDesc,
+.helper,
+.connectionMeta,
+.connectionSummary {
+  margin-top: 8px;
+  font-size: 12px;
+  opacity: .74;
+  line-height: 1.6;
+}
+
+.createActions,
+.formActions,
+.connectionActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.formCard,
+.connectionCard,
+.emptyState {
+  padding: 18px;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-list-header-border-bottom) 66%, transparent);
 }
 
 .cardDesc {
-  margin-top: 6px;
-  font-size: 12px;
-  opacity: .72;
-  line-height: 1.6;
+  max-width: 360px;
+  margin-top: 0;
 }
 
 .field {
@@ -353,20 +409,18 @@ export default {
 .fieldRow {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  gap: 14px;
 }
 
 .label {
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
+  line-height: 1.45;
 }
 
 .helper {
   margin-top: 6px;
-  font-size: 12px;
-  opacity: .65;
-  line-height: 1.5;
 }
 
 .error {
@@ -376,20 +430,8 @@ export default {
   line-height: 1.5;
 }
 
-.formActions {
-  display: flex;
-  flex-wrap: wrap;
-}
-
-.listTitle {
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.connectionCard {
-  padding: 14px;
-  border-radius: @radius-border;
-  background: var(--color-primary-background);
+.listHeader {
+  margin-bottom: 2px;
 }
 
 .connectionHeader {
@@ -400,76 +442,83 @@ export default {
 }
 
 .connectionName {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
+  line-height: 1.35;
 }
 
 .connectionMeta {
-  margin-top: 4px;
-  font-size: 12px;
-  opacity: .72;
+  letter-spacing: .06em;
+  text-transform: uppercase;
 }
 
 .statusBadge {
   flex: none;
-  padding: 2px 8px;
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 12px;
   border-radius: 999px;
   font-size: 12px;
-  line-height: 18px;
-  background: var(--color-button-background);
+  font-weight: 700;
+  letter-spacing: .04em;
+  border: 1px solid transparent;
+  background: color-mix(in srgb, var(--color-button-background) 86%, transparent);
 }
 
 .status_success {
   color: #1f8f55;
-  background: rgba(31, 143, 85, .14);
+  background: rgba(31, 143, 85, .12);
+  border-color: rgba(31, 143, 85, .18);
 }
 
 .status_error {
   color: #cc4545;
-  background: rgba(204, 69, 69, .14);
+  background: rgba(204, 69, 69, .12);
+  border-color: rgba(204, 69, 69, .18);
 }
 
 .status_scanning {
   color: #b57a06;
   background: rgba(181, 122, 6, .14);
+  border-color: rgba(181, 122, 6, .2);
 }
 
 .status_idle {
-  opacity: .75;
+  color: color-mix(in srgb, var(--color-font) 82%, transparent);
+  border-color: color-mix(in srgb, var(--color-list-header-border-bottom) 52%, transparent);
 }
 
 .connectionPath,
 .connectionSummary {
-  margin-top: 8px;
+  margin-top: 10px;
   font-size: 12px;
   line-height: 1.6;
   word-break: break-all;
 }
 
+.connectionPath {
+  font-weight: 600;
+  opacity: .88;
+}
+
 .connectionSummary {
-  opacity: .75;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--color-primary-background) 70%, transparent);
 }
 
-.connectionActions {
-  display: flex;
-  flex-wrap: wrap;
-}
+@media (max-width: 720px) {
+  .fieldRow {
+    grid-template-columns: 1fr;
+  }
 
-.emptyState {
-  padding: 18px 14px;
-  border-radius: @radius-border;
-  background: var(--color-primary-background);
-}
-
-.emptyTitle {
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.emptyDesc {
-  margin-top: 6px;
-  font-size: 12px;
-  opacity: .72;
-  line-height: 1.6;
+  .cardHeader,
+  .sectionHeader,
+  .listHeader,
+  .connectionHeader {
+    flex-direction: column;
+  }
 }
 </style>
+

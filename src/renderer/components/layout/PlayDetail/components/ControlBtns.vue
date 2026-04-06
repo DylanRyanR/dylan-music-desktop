@@ -111,40 +111,55 @@ export default {
 .footerLeftControlBtns {
   display: flex;
   flex-flow: row nowrap;
-  justify-content: flex-end;
+  justify-content: flex-start;
   align-items: center;
   gap: 8px;
 
   button {
-    width: 20px;
-    color: var(--color-font);
+    width: 34px;
+    height: 34px;
+    color: rgba(255, 255, 255, .74);
   }
 
   .footerLeftControlBtn {
-    // width: 18px;
-    // height: 18px;
-    opacity: .5;
+    opacity: 1;
     cursor: pointer;
-    transition: opacity @transition-normal;
+    transition: @transition-fast;
+    transition-property: opacity, transform, background-color, color;
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: transparent;
+    background-color: rgba(255, 255, 255, .08);
     border: none;
+    border-radius: 999px;
     padding: 0;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06);
 
     &:hover {
-      opacity: .9;
+      opacity: 1;
+      transform: translateY(-1px);
+      background-color: rgba(255, 255, 255, .14);
+      color: rgba(255, 255, 255, .94);
+    }
+
+    &:active {
+      transform: scale(.96);
     }
 
     &.active {
-      color: var(--color-primary);
-      opacity: .8;
+      color: #fff;
+      background-color: color-mix(in srgb, var(--color-primary) 80%, rgba(255, 255, 255, .08));
     }
   }
 
   .lrcBtn {
-    width: 20px;
+    width: 34px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .footerLeftControlBtn {
+    transition: none;
   }
 }
 

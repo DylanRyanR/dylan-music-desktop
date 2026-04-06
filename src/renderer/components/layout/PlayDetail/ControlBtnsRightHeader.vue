@@ -34,7 +34,14 @@ const handle_focus = () => {
     node.classList.remove(cssModule.hover)
   }
 }
-const getBtnEl = (el) => el.tagName == 'BUTTON' || !el ? el : getBtnEl(el.parentNode)
+const getBtnEl = (el) => {
+  let current = el
+  while (current) {
+    if (current.tagName == 'BUTTON') return current
+    current = current.parentNode
+  }
+  return null
+}
 const handle_mouseover = (event) => {
   const btn = getBtnEl(event.target)
   if (!btn) return
@@ -126,18 +133,43 @@ const fullscreenExit = () => {
 
   .controBtn {
     right: 0;
+    padding: 10px 18px 0;
+    gap: 8px;
+
     button {
-      width: 46px;
-      height: 30px;
-      color: var(--color-font-label);
-      transition: background-color 0.2s ease-in-out;
+      width: 38px;
+      height: 38px;
+      border-radius: 999px;
+      color: rgba(255, 255, 255, .88);
+      background: rgba(255, 255, 255, .08);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, .08),
+        0 8px 18px rgba(0, 0, 0, .12);
+      transition: @transition-fast;
+      transition-property: background-color, transform, color, box-shadow;
 
       &.hover {
-        background-color: var(--color-button-background-hover);
+        transform: translateY(-1px);
+        background-color: rgba(255, 255, 255, .14);
+        color: #fff;
 
         &.close {
-          background-color: var(--color-btn-close);
+          background-color: color-mix(in srgb, var(--color-btn-close) 82%, rgba(255, 255, 255, .08));
         }
+      }
+
+      &:active {
+        transform: scale(.96);
+      }
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .header {
+    .controBtn {
+      button {
+        transition: none;
       }
     }
   }

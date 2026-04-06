@@ -315,43 +315,51 @@ export default {
   position: absolute;
   top: calc(38% + var(--playDetail-lrc-font-size, 16px) + 4px);
   left: 0;
-  // height: 6px;
   width: 100%;
   pointer-events: none;
-  // opacity: .5;
+
   .line {
-    border-top: 2px dotted var(--color-primary-dark-100);
-    opacity: .15;
-    margin-right: 30px;
-    -webkit-mask-image: linear-gradient(90deg, transparent 0%, transparent 15%, #fff 100%);
+    border-top: 2px dashed rgba(255, 255, 255, .18);
+    margin-right: 42px;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, .45) 18%, #fff 100%);
   }
   .label {
     position: absolute;
-    right: 30px;
+    right: 42px;
     top: -14px;
     line-height: 1.2;
     font-size: 12px;
-    color: var(--color-primary-dark-100);
-    opacity: .7;
+    letter-spacing: .04em;
+    color: rgba(255, 255, 255, .62);
+    opacity: .92;
   }
   .skipBtn {
     position: absolute;
     right: 0;
     top: 0;
     transform: translateY(-50%);
-    width: 30px;
-    height: 30px;
+    width: 34px;
+    height: 34px;
     padding: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: none !important;
+    background: rgba(255, 255, 255, .08) !important;
+    border: none;
+    border-radius: 999px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08);
     pointer-events: initial;
-    transition: @transition-normal;
-    transition-property: opacity;
-    opacity: .8;
+    transition: @transition-fast;
+    transition-property: opacity, transform, background-color;
+    opacity: .92;
     &:hover {
-      opacity: .6;
+      opacity: 1;
+      transform: translateY(-50%) translateY(-1px);
+      background: rgba(255, 255, 255, .14) !important;
+    }
+
+    &:active {
+      transform: translateY(-50%) scale(.96);
     }
   }
 }
@@ -359,25 +367,47 @@ export default {
   position: absolute;
   left: 0;
   top: 0;
-  // text-align: center;
   height: 100%;
   width: 100%;
   font-size: var(--playDetail-lrc-font-size, 16px);
   z-index: 10;
-  color: var(--color-400);
+  color: rgba(255, 255, 255, .64);
+  text-shadow: 0 2px 14px rgba(0, 0, 0, .22);
 
   .lyricSelectline {
-    padding: calc(var(--playDetail-lrc-font-size, 16px) / 2) 1px;
+    padding: calc(var(--playDetail-lrc-font-size, 16px) / 2.2) 10px;
     overflow-wrap: break-word;
     transition: @transition-normal !important;
-    transition-property: color, font-size;
-    line-height: 1.3;
+    transition-property: color, font-size, opacity, transform;
+    line-height: 1.32;
+    opacity: .9;
   }
   .lyricSelectlineExtended {
-    font-size: 14px;
+    font-size: .88em;
+    opacity: .8;
   }
   .lrcActive {
-    color: var(--color-primary);
+    color: #fff;
+    opacity: 1;
+    transform: scale(1.02);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lyric {
+    :global {
+      .line-content,
+      .font-lrc,
+      .line-content > .line > .font-lrc > span {
+        transition: none !important;
+      }
+    }
+  }
+
+  .skip {
+    .skipBtn {
+      transition: none;
+    }
   }
 }
 

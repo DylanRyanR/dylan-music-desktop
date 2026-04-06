@@ -17,9 +17,18 @@ transition(enter-active-class="animated slideInRight" leave-active-class="animat
             img(v-if="musicInfo.pic" :class="$style.img" :src="musicInfo.pic")
             div(v-else :class="$style.imgPlaceholder")
           div.description(:class="['scroll', $style.description]")
-            p {{ $t('player__music_name') }}{{ musicInfo.name }}
-            p {{ $t('player__music_singer') }}{{ musicInfo.singer }}
-            p(v-if="musicInfo.album") {{ $t('player__music_album') }}{{ musicInfo.album }}
+            div(:class="$style.metaRow")
+              span(:class="$style.metaLabel") {{ $t('player__music_name') }}
+              span(:class="$style.metaValue") {{ musicInfo.name }}
+            div(:class="$style.metaRow")
+              span(:class="$style.metaLabel") {{ $t('player__music_singer') }}
+              span(:class="$style.metaValue") {{ musicInfo.singer }}
+            div(v-if="musicInfo.album" :class="$style.metaRow")
+              span(:class="$style.metaLabel") {{ $t('player__music_album') }}
+              span(:class="$style.metaValue") {{ musicInfo.album }}
+            div(:class="$style.metaAccent")
+              span(:class="$style.metaAccentLine")
+              span(:class="$style.metaAccentText") {{ status || $t('player__play') }} · {{ nowPlayTimeStr }} / {{ maxPlayTimeStr }}
 
       transition(enter-active-class="animated fadeIn" leave-active-class="animated fadeOut")
         LyricPlayer(v-if="visibled")
@@ -39,6 +48,7 @@ import {
   isShowPlayComment,
   musicInfo,
   playMusicInfo,
+  status,
 } from '@renderer/store/player/state'
 import {
   setShowPlayerDetail,
@@ -53,6 +63,7 @@ import ControlBtnsRightHeader from './ControlBtnsRightHeader.vue'
 import { registerAutoHideMounse, unregisterAutoHideMounse } from './autoHideMounse'
 import { appSetting } from '@renderer/store/setting'
 import { closeWindow, maxWindow, minWindow, setFullScreen } from '@renderer/utils/ipc'
+import usePlayProgress from '@renderer/utils/compositions/usePlayProgress'
 
 export default {
   name: 'CorePlayDetail',
@@ -71,6 +82,10 @@ export default {
         backgroundImage: `url("${musicInfo.pic}")`,
       }
     })
+    const {
+      nowPlayTimeStr,
+      maxPlayTimeStr,
+    } = usePlayProgress()
 
     let clickTime = 0
 
@@ -115,6 +130,9 @@ export default {
       isShowPlayerDetail,
       isShowPlayComment,
       musicInfo,
+      status,
+      nowPlayTimeStr,
+      maxPlayTimeStr,
       bgStyle,
       hide,
       handleContextMenu,
@@ -224,6 +242,7 @@ export default {
   min-height: 0;
   overflow: hidden;
   display: flex;
+  gap: 24px;
   margin: 0 30px;
   position: relative;
 
@@ -231,7 +250,7 @@ export default {
     :global {
       .left {
         flex-basis: 18%;
-        .description p {
+        .metaValue {
           font-size: 12px;
         }
       }
@@ -263,26 +282,26 @@ export default {
   display: flex;
   flex-flow: column nowrap;
   justify-content: flex-start;
-  width: min(100%, 360px);
+  width: min(100%, 372px);
   min-height: 0;
 }
 .coverFrame {
   position: relative;
   width: 100%;
   aspect-ratio: 1 / 1;
-  border-radius: 18px;
-  padding: 14px;
-  background: rgba(255, 255, 255, .08);
+  border-radius: 24px;
+  padding: 16px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .08) 0%, rgba(255, 255, 255, .05) 100%);
   box-shadow:
-    0 22px 60px rgba(0, 0, 0, .22),
+    0 24px 64px rgba(0, 0, 0, .22),
     inset 0 1px 0 rgba(255, 255, 255, .12);
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(14px);
 }
 .img,
 .imgPlaceholder {
   width: 100%;
   height: 100%;
-  border-radius: 12px;
+  border-radius: 16px;
 }
 .img {
   display: block;
@@ -294,26 +313,95 @@ export default {
   border: 1px solid rgba(255, 255, 255, .08);
 }
 .description {
-  max-width: 360px;
+  max-width: 372px;
   margin-top: 18px;
-  padding: 16px 18px 18px;
+  padding: 18px 20px 20px;
   min-height: 0;
-  border-radius: 16px;
-  background: rgba(8, 10, 18, .18);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08);
-  backdrop-filter: blur(12px);
-  p {
-    line-height: 1.6;
-    font-size: 14px;
-    overflow-wrap: break-word;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, .2);
+  border-radius: 20px;
+  background: linear-gradient(180deg, rgba(8, 10, 18, .16) 0%, rgba(8, 10, 18, .24) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .08),
+    0 18px 40px rgba(0, 0, 0, .12);
+  backdrop-filter: blur(14px);
+}
+.metaRow {
+  display: grid;
+  grid-template-columns: minmax(68px, 84px) minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
 
-    & + p {
-      margin-top: 8px;
-    }
+  & + .metaRow {
+    margin-top: 12px;
+  }
+}
+.metaLabel {
+  font-size: 12px;
+  line-height: 1.45;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, .54);
+}
+.metaValue {
+  font-size: 15px;
+  line-height: 1.55;
+  font-weight: 600;
+  color: rgba(255, 255, 255, .92);
+  overflow-wrap: break-word;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .22);
+}
+.metaAccent {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, .08);
+}
+.metaAccentLine {
+  width: 28px;
+  height: 2px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-primary) 80%, rgba(255, 255, 255, .08));
+}
+.metaAccentText {
+  font-size: 12px;
+  line-height: 1.5;
+  font-weight: 600;
+  color: rgba(255, 255, 255, .72);
+  font-variant-numeric: tabular-nums;
+}
+.comment {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 50%;
+  height: 100%;
+  opacity: 1;
+  margin-left: 10px;
+  transform: scaleX(0);
+}
+
+@media (max-width: 980px) {
+  .main {
+    gap: 18px;
+    margin: 0 20px;
+  }
+
+  .coverFrame {
+    border-radius: 20px;
+  }
+
+  .description {
+    padding: 16px 18px 18px;
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .main,
+  .left {
+    transition: none;
+  }
+}
 
 .comment {
   position: absolute;
