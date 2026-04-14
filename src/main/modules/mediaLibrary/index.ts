@@ -2,6 +2,8 @@
 import path from 'node:path'
 import os from 'node:os'
 import fs from 'node:fs/promises'
+import fsSync from 'node:fs'
+import { pathToFileURL } from 'node:url'
 import cp from 'node:child_process'
 import { promisify } from 'node:util'
 import { createHash } from 'node:crypto'
@@ -16,13 +18,14 @@ const execFile = promisify(cp.execFile)
 
 export interface MediaConnectionConfig {
   id: string
-  type: 'smb' | 'webdav'
+  type: 'smb' | 'webdav' | 'local'
   name: string
   host?: string
   port?: number
   share?: string
   rootPath?: string
   url?: string
+  localPath?: string
   username?: string
   password?: string
   domain?: string
@@ -53,6 +56,17 @@ const normalizeRemotePath = (inputPath: string) => {
   if (!inputPath) return '/'
   const normalized = inputPath.replace(/\\/g, '/')
   return normalized.startsWith('/') ? normalized : `/${normalized}`
+}
+
+const normalizeLocalPath = (inputPath?: string) => {
+  if (!inputPath) return ''
+  return path.normalize(inputPath)
+}
+
+const getLocalRootPath = (connection: MediaConnectionConfig) => {
+  const localRoot = normalizeLocalPath(connection.localPath)
+  if (!localRoot) throw new Error('local folder path is required')
+  return localRoot
 }
 
 const normalizeSmbShareName = (share?: string) => {
@@ -89,7 +103,7 @@ const connectWindowsSmb = async(connection: MediaConnectionConfig) => {
 const walkNativeDir = async(dirPath: string, result: string[] = []) => {
   const entries = await fs.readdir(dirPath, { withFileTypes: true })
   for (const entry of entries) {
-    const fullPath = path.win32.join(dirPath, entry.name)
+    const fullPath = path.join(dirPath, entry.name)
     if (entry.isDirectory()) await walkNativeDir(fullPath, result)
     else result.push(fullPath)
   }
@@ -97,11 +111,18 @@ const walkNativeDir = async(dirPath: string, result: string[] = []) => {
 }
 
 const nativePathToRemotePath = (connection: MediaConnectionConfig, nativePath: string) => {
-  const normalizedNativePath = path.win32.normalize(nativePath)
-  const normalizedRoot = path.win32.normalize(getSmbUncRoot(connection))
+  const normalizedNativePath = path.normalize(nativePath)
+  const normalizedRoot = path.normalize(getSmbUncRoot(connection))
   const relative = normalizedNativePath.toLowerCase().startsWith(normalizedRoot.toLowerCase())
     ? normalizedNativePath.slice(normalizedRoot.length)
-    : path.win32.relative(normalizedRoot, normalizedNativePath)
+    : path.relative(normalizedRoot, normalizedNativePath)
+  return normalizeRemotePath(relative.replace(/\\/g, '/'))
+}
+
+const nativePathToLocalRelativePath = (connection: MediaConnectionConfig, nativePath: string) => {
+  const normalizedNativePath = path.normalize(nativePath)
+  const normalizedRoot = path.normalize(getLocalRootPath(connection))
+  const relative = path.relative(normalizedRoot, normalizedNativePath)
   return normalizeRemotePath(relative.replace(/\\/g, '/'))
 }
 
@@ -113,7 +134,7 @@ const tryScanSmbNativeWindows = async(connection: MediaConnectionConfig): Promis
   const files = await walkNativeDir(root)
   const result: MediaScannedItem[] = []
   for (const nativePath of files) {
-    const fileName = path.win32.basename(nativePath)
+    const fileName = path.basename(nativePath)
     if (!isAudioFile(fileName)) continue
     const stat = await fs.stat(nativePath)
     const data = await fs.readFile(nativePath)
@@ -194,6 +215,7 @@ const toMediaMusicInfo = (item: LX.DBService.MediaItem, connectionNameMap: Map<s
       ext: item.ext,
       connectionId: item.connectionId,
       connectionName: connectionNameMap.get(item.connectionId) ?? '',
+      connectionType: meta.type ?? 'smb',
       type: meta.type,
       versionToken: item.versionToken,
       picUrl: null,
@@ -232,11 +254,6 @@ const createSmbClient = (connection: MediaConnectionConfig) => {
   if (!connection.host || !connection.share) throw new Error('smb host/share is required')
   const sharePath = `\\\\${connection.host}${connection.port ? `:${connection.port}` : ''}\\${connection.share}`
 
-  // Compatibility enhancement:
-  // 1. If domain is provided, use it.
-  // 2. If domain is empty but username is present, default to 'WORKGROUP'.
-  //    This avoids the INVALID_PARAMETER error and covers standard Samba setups.
-  // 3. If username is also empty (anonymous), domain remains empty.
   let domain_for_smb2 = connection.domain
   if (!domain_for_smb2 && connection.username) {
     domain_for_smb2 = 'WORKGROUP'
@@ -271,6 +288,7 @@ const mapItem = (connection: MediaConnectionConfig, itemPath: string, fileName: 
       type: connection.type,
       connectionName: connection.name,
       rootPath: connection.rootPath ?? '/',
+      localPath: connection.localPath ?? '',
     }),
   }
 }
@@ -293,6 +311,22 @@ const scanWebdav = async(connection: MediaConnectionConfig): Promise<MediaScanne
     const statMtime = entry.lastmod ? new Date(entry.lastmod).getTime() : Date.now()
     const size = Number(entry.size ?? 0)
     result.push(mapItem(connection, remotePath, filename, size, statMtime, metadata))
+  }
+  return result
+}
+
+const scanLocal = async(connection: MediaConnectionConfig): Promise<MediaScannedItem[]> => {
+  const root = getLocalRootPath(connection)
+  const stats = await fs.stat(root)
+  if (!stats.isDirectory()) throw new Error('Local folder path must be a directory')
+  const files = await walkNativeDir(root)
+  const result: MediaScannedItem[] = []
+  for (const filePath of files) {
+    const fileName = path.basename(filePath)
+    if (!isAudioFile(fileName)) continue
+    const stat = await fs.stat(filePath)
+    const metadata = await readMetadata(filePath)
+    result.push(mapItem(connection, nativePathToLocalRelativePath(connection, filePath), fileName, stat.size, stat.mtimeMs, metadata))
   }
   return result
 }
@@ -367,7 +401,14 @@ const scanSmb = async(connection: MediaConnectionConfig): Promise<MediaScannedIt
 export const scanConnection = async(connection: MediaConnectionConfig): Promise<MediaScannedItem[]> => {
   if (connection.type === 'webdav') return scanWebdav(connection)
   if (connection.type === 'smb') return scanSmb(connection)
+  if (connection.type === 'local') return scanLocal(connection)
   throw new Error(`Unsupported media connection type: ${connection.type}`)
+}
+
+const getLocalFilePath = (connection: MediaConnectionConfig, itemPath: string) => {
+  const root = getLocalRootPath(connection)
+  const relative = normalizeRemotePath(itemPath).replace(/^\//, '')
+  return path.join(root, relative)
 }
 
 export const getPlayUrl = async(connection: MediaConnectionConfig, item: LX.DBService.MediaItem) => {
@@ -401,6 +442,12 @@ export const getPlayUrl = async(connection: MediaConnectionConfig, item: LX.DBSe
     } finally {
       client.disconnect()
     }
+  }
+
+  if (connection.type === 'local') {
+    const filePath = getLocalFilePath(connection, item.path)
+    await fs.access(filePath, fsSync.constants.R_OK)
+    return pathToFileURL(filePath).href
   }
 
   throw new Error('Unsupported media source')

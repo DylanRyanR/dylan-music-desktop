@@ -41,7 +41,7 @@ declare namespace LX {
       ext: string
       connectionId: string
       connectionName: string
-      connectionType: 'smb' | 'webdav'
+      connectionType: 'smb' | 'webdav' | 'local'
     }
 
 
