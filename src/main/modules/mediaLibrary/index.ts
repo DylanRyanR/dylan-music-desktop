@@ -3,14 +3,13 @@ import path from 'node:path'
 import os from 'node:os'
 import fs from 'node:fs/promises'
 import fsSync from 'node:fs'
-import { pathToFileURL } from 'node:url'
 import cp from 'node:child_process'
 import { promisify } from 'node:util'
 import { createHash } from 'node:crypto'
 import { createClient } from 'webdav'
 import SMB2 from '@marsaud/smb2'
 import { parseFile } from 'music-metadata'
-import { formatPlayTime } from '@common/utils/common'
+import { formatPlayTime, encodePath } from '@common/utils/common'
 
 const AUDIO_EXTS = new Set(['mp3', 'flac', 'm4a', 'aac', 'wav', 'ogg', 'opus'])
 const CACHE_DIR = path.join(os.tmpdir(), 'lxmusic_media_cache')
@@ -50,6 +49,14 @@ export interface MediaScannedItem {
   ext: string
   versionToken: string
   meta: string
+}
+
+interface MediaParsedMetadata {
+  title: string
+  artist: string
+  album: string
+  interval: string | null
+  picUrl: string | null
 }
 
 const normalizeRemotePath = (inputPath: string) => {
@@ -218,19 +225,21 @@ const toMediaMusicInfo = (item: LX.DBService.MediaItem, connectionNameMap: Map<s
       connectionType: meta.type ?? 'smb',
       type: meta.type,
       versionToken: item.versionToken,
-      picUrl: null,
+      picUrl: meta.picUrl ?? null,
     } as any,
   } as LX.Music.MusicInfo
 }
 
-const readMetadata = async(filePath: string) => {
+const readMetadata = async(filePath: string): Promise<MediaParsedMetadata> => {
   try {
     const metadata = await parseFile(filePath)
+    const picture = metadata.common.picture?.[0]
     return {
       title: (metadata.common.title || path.basename(filePath, path.extname(filePath))).trim(),
       artist: metadata.common.artists?.length ? metadata.common.artists.join('、') : '',
       album: metadata.common.album?.trim() ?? '',
       interval: metadata.format.duration ? formatPlayTime(metadata.format.duration) : null,
+      picUrl: picture ? `data:${picture.format};base64,${Buffer.from(picture.data).toString('base64')}` : null,
     }
   } catch {
     return {
@@ -238,6 +247,7 @@ const readMetadata = async(filePath: string) => {
       artist: '',
       album: '',
       interval: null,
+      picUrl: null,
     }
   }
 }
@@ -268,7 +278,7 @@ const createSmbClient = (connection: MediaConnectionConfig) => {
   })
 }
 
-const mapItem = (connection: MediaConnectionConfig, itemPath: string, fileName: string, fileSize: number, mtime: number, metadata: Awaited<ReturnType<typeof readMetadata>>): MediaScannedItem => {
+const mapItem = (connection: MediaConnectionConfig, itemPath: string, fileName: string, fileSize: number, mtime: number, metadata: MediaParsedMetadata): MediaScannedItem => {
   const ext = getExt(fileName)
   const versionToken = getVersionToken(itemPath, fileSize, mtime)
   return {
@@ -289,6 +299,7 @@ const mapItem = (connection: MediaConnectionConfig, itemPath: string, fileName: 
       connectionName: connection.name,
       rootPath: connection.rootPath ?? '/',
       localPath: connection.localPath ?? '',
+      picUrl: metadata.picUrl,
     }),
   }
 }
@@ -447,7 +458,7 @@ export const getPlayUrl = async(connection: MediaConnectionConfig, item: LX.DBSe
   if (connection.type === 'local') {
     const filePath = getLocalFilePath(connection, item.path)
     await fs.access(filePath, fsSync.constants.R_OK)
-    return pathToFileURL(filePath).href
+    return `file:///${encodePath(filePath)}`
   }
 
   throw new Error('Unsupported media source')
