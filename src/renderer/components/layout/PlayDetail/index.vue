@@ -245,32 +245,32 @@ export default {
   position: relative;
 
   &.showComment {
-    :global {
-      .left {
-        flex-basis: 18%;
-        .title {
-          font-size: 22px;
-          line-height: 1.22;
-        }
-        .subtitle {
-          margin-top: 8px;
-          font-size: 13px;
-          line-height: 1.45;
-        }
-        .metaValue {
-          font-size: 12px;
-        }
+    .left {
+      flex-basis: 18%;
+      .title {
+        font-size: 22px;
+        line-height: 1.22;
       }
+      .subtitle {
+        margin-top: 8px;
+        font-size: 13px;
+        line-height: 1.45;
+      }
+      .metaValue {
+        font-size: 12px;
+      }
+    }
+    :global {
       .right {
         flex-basis: 30%;
         .lyricSelectContent {
           font-size: 14px;
         }
       }
-      .comment {
-        opacity: 1;
-        transform: scaleX(1);
-      }
+    }
+    .comment {
+      opacity: 1;
+      transform: scaleX(1);
     }
   }
 }
@@ -426,17 +426,5 @@ export default {
     transition: none;
   }
 }
-
-.comment {
-  position: absolute;
-  right: 0;
-  top: 0;
-  width: 50%;
-  height: 100%;
-  opacity: 1;
-  margin-left: 10px;
-  transform: scaleX(0);
-}
-
 
 </style>
