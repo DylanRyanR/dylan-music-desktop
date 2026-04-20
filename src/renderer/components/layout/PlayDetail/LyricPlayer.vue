@@ -269,7 +269,7 @@ export default {
           opacity: .78;
         }
       }
-      &.line-mode.active .font-lrc, &.font-mode.played .font-lrc {
+      &.line-mode.active .font-lrc {
         color: #fff;
       }
       &.font-mode > .line > .font-lrc {
