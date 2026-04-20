@@ -205,15 +205,15 @@ export default {
   &::before {
     content: '';
     position: absolute;
-    inset: 8% 2% 8% 6%;
-    border-radius: 30px;
-    background: linear-gradient(180deg, rgba(4, 7, 15, .1) 0%, rgba(4, 7, 15, .22) 100%);
+    inset: 6% 1% 6% 4%;
+    border-radius: 34px;
+    background: linear-gradient(180deg, rgba(8, 10, 18, .06) 0%, rgba(8, 10, 18, .14) 100%);
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, .1),
-      0 18px 44px rgba(0, 0, 0, .16);
-    backdrop-filter: blur(16px);
+      inset 0 1px 0 rgba(255, 255, 255, .05),
+      0 16px 38px rgba(0, 0, 0, .10);
+    backdrop-filter: blur(12px);
     pointer-events: none;
-    opacity: .9;
+    opacity: .72;
   }
 }
 .lyric {
@@ -223,7 +223,7 @@ export default {
   height: 100%;
   overflow: hidden;
   font-size: var(--playDetail-lrc-font-size, 16px);
-  -webkit-mask-image: linear-gradient(transparent 0%, rgba(255, 255, 255, .72) 14%, #fff 28%, #fff 72%, rgba(255, 255, 255, .72) 86%, transparent 100%);
+  -webkit-mask-image: linear-gradient(transparent 0%, rgba(255, 255, 255, .62) 16%, #fff 30%, #fff 70%, rgba(255, 255, 255, .62) 84%, transparent 100%);
   cursor: grab;
   text-shadow: 0 2px 14px rgba(0, 0, 0, .28);
   &.draging {
@@ -235,18 +235,18 @@ export default {
     }
     .line-content {
       line-height: 1.24;
-      padding: calc(var(--playDetail-lrc-font-size, 16px) / 2.2) 10px;
+      padding: calc(var(--playDetail-lrc-font-size, 16px) / 2.4) 12px;
       overflow-wrap: break-word;
-      color: rgba(255, 255, 255, .72);
-      opacity: .92;
+      color: rgba(255, 255, 255, .56);
+      opacity: .78;
       transition: @transition-normal;
       transition-property: padding, opacity, transform, filter;
-      filter: saturate(.88);
+      filter: saturate(.82) blur(.2px);
 
       .extended {
-        font-size: 0.82em;
-        margin-top: 6px;
-        opacity: .78;
+        font-size: 0.78em;
+        margin-top: 8px;
+        opacity: .62;
       }
       &.line-mode {
         .font-lrc {
@@ -256,13 +256,18 @@ export default {
       }
       &.active {
         opacity: 1;
-        transform: scale(1.02);
-        filter: saturate(1.08);
+        transform: scale(1.018);
+        filter: saturate(1.04);
 
         .font-lrc {
+          color: #fff;
           text-shadow:
-            0 0 22px rgba(255, 255, 255, .2),
-            0 3px 20px rgba(0, 0, 0, .34);
+            0 0 28px rgba(255, 255, 255, .16),
+            0 4px 22px rgba(0, 0, 0, .34);
+        }
+
+        .extended {
+          opacity: .78;
         }
       }
       &.line-mode.active .font-lrc, &.font-mode.played .font-lrc {
@@ -313,7 +318,7 @@ export default {
 
 .skip {
   position: absolute;
-  top: calc(38% + var(--playDetail-lrc-font-size, 16px) + 4px);
+  top: calc(38% + var(--playDetail-lrc-font-size, 16px) + 8px);
   left: 0;
   width: 100%;
   pointer-events: none;
@@ -322,6 +327,7 @@ export default {
     border-top: 2px dashed rgba(255, 255, 255, .18);
     margin-right: 42px;
     -webkit-mask-image: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, .45) 18%, #fff 100%);
+    opacity: .32;
   }
   .label {
     position: absolute;
@@ -330,7 +336,8 @@ export default {
     line-height: 1.2;
     font-size: 12px;
     letter-spacing: .04em;
-    color: rgba(255, 255, 255, .62);
+    color: rgba(255, 255, 255, .72);
+    text-shadow: 0 2px 10px rgba(0, 0, 0, .18);
     opacity: .92;
   }
   .skipBtn {
@@ -344,10 +351,12 @@ export default {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(255, 255, 255, .08) !important;
+    background: rgba(255, 255, 255, .10) !important;
     border: none;
     border-radius: 999px;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, .08),
+      0 8px 20px rgba(0, 0, 0, .16);
     pointer-events: initial;
     transition: @transition-fast;
     transition-property: opacity, transform, background-color;
