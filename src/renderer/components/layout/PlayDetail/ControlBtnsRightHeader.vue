@@ -141,16 +141,16 @@ const fullscreenExit = () => {
       height: 38px;
       border-radius: 999px;
       color: rgba(255, 255, 255, .88);
-      background: rgba(255, 255, 255, .08);
+      background: rgba(255, 255, 255, .06);
       box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, .08),
-        0 8px 18px rgba(0, 0, 0, .12);
+        inset 0 1px 0 rgba(255, 255, 255, .06),
+        0 6px 14px rgba(0, 0, 0, .10);
       transition: @transition-fast;
       transition-property: background-color, transform, color, box-shadow;
 
       &.hover {
-        transform: translateY(-1px);
-        background-color: rgba(255, 255, 255, .14);
+        transform: scale(1.02);
+        background-color: rgba(255, 255, 255, .12);
         color: #fff;
 
         &.close {

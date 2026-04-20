@@ -113,12 +113,12 @@ export default {
   flex-flow: row nowrap;
   justify-content: flex-start;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
 
   button {
-    width: 34px;
-    height: 34px;
-    color: rgba(255, 255, 255, .74);
+    width: 32px;
+    height: 32px;
+    color: rgba(255, 255, 255, .62);
   }
 
   .footerLeftControlBtn {
@@ -129,17 +129,17 @@ export default {
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: rgba(255, 255, 255, .08);
+    background-color: rgba(255, 255, 255, .06);
     border: none;
     border-radius: 999px;
     padding: 0;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05);
 
     &:hover {
       opacity: 1;
-      transform: translateY(-1px);
-      background-color: rgba(255, 255, 255, .14);
-      color: rgba(255, 255, 255, .94);
+      transform: scale(1.02);
+      background-color: rgba(255, 255, 255, .12);
+      color: rgba(255, 255, 255, .88);
     }
 
     &:active {
@@ -148,12 +148,15 @@ export default {
 
     &.active {
       color: #fff;
-      background-color: color-mix(in srgb, var(--color-primary) 80%, rgba(255, 255, 255, .08));
+      background-color: color-mix(in srgb, var(--color-primary) 74%, rgba(255, 255, 255, .10));
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, .10),
+        0 8px 18px rgba(0, 0, 0, .14);
     }
   }
 
   .lrcBtn {
-    width: 34px;
+    width: 32px;
   }
 }
 
