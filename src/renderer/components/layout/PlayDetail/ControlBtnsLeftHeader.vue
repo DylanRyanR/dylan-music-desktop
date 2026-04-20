@@ -50,6 +50,7 @@ const handle_mouseover = (event) => {
 const handle_mouseout = (event) => {
   const btn = getBtnEl(event.target)
   if (!btn) return
+  if (getBtnEl(event.relatedTarget) == btn) return
   btn.classList.remove(cssModule.hover)
 }
 

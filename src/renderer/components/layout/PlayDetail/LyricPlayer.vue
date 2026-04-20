@@ -286,6 +286,9 @@ export default {
           filter: drop-shadow(0 3px 14px rgba(0, 0, 0, .22));
         }
       }
+      &.font-mode.played > .line > .font-lrc > span {
+        background-size: 100% 100%;
+      }
     }
   }
   // p {
