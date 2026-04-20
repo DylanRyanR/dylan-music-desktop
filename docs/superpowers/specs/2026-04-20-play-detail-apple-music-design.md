@@ -1,269 +1,269 @@
-# Play Detail Apple Music Style Deepening Design
+# 播放详情页 Apple Music 风格深化设计
 
-## Overview
+## 概述
 
-This design refines the play detail page to feel closer to Apple Music while preserving the current page layout and the immersive direction already introduced in recent local changes.
+这份设计文档用于在保留当前播放详情页整体布局的前提下，让页面气质更接近 Apple Music，同时延续你最近已经做出的沉浸式改造方向。
 
-The goal is not to redesign the screen structure. The goal is to deepen the existing visual language so the page feels more unified, more premium, and more content-led.
+这次目标不是重做页面结构，而是在现有基础上继续深挖视觉与交互细节，让整个页面看起来更统一、更高级，也更以内容为中心。
 
-Core direction:
+核心方向：
 
-- Keep the current left cover, right lyric, and bottom control layout.
-- Retain the atmospheric immersive mood instead of flattening the UI into a minimal desktop panel.
-- Make the page feel less like several glass cards and more like one continuous music scene.
-- Push detail quality in hierarchy, motion, focus, and interaction feedback toward Apple Music.
+- 保留当前左侧封面、右侧歌词、底部控制栏的整体布局。
+- 保留现有的沉浸式氛围，不把页面收成偏朴素的传统桌面面板。
+- 让页面从“几块玻璃卡片的组合”更接近“一个完整的音乐场景”。
+- 在层级、动效、聚焦和交互反馈上向 Apple Music 靠拢。
 
-## Goals
+## 目标
 
-- Increase perceived polish without changing the information architecture.
-- Improve focus so the eye naturally lands on the cover and active lyric line.
-- Make the footer controls feel more like a cohesive playback system and less like a utility toolbar.
-- Preserve current functionality, including comments, lyric selection, desktop lyric control, and playback tools.
-- Keep implementation scope mostly within visual styling and motion behavior.
+- 在不改信息架构的前提下提升整体质感。
+- 让视线更自然地落到封面与当前歌词行上。
+- 让底部控制栏更像一个统一的播放控制系统，而不是功能工具条。
+- 保留当前已有功能，包括评论、歌词选择、桌面歌词控制和播放工具。
+- 尽量把实现范围控制在视觉样式与动效节奏的优化上。
 
-## Non-Goals
+## 非目标
 
-- No large structural layout changes.
-- No removal of existing controls or feature affordances.
-- No rewrite of lyric logic, player logic, or comment functionality.
-- No attempt to exactly clone Apple Music UI assets or layout proportions.
+- 不做大幅度结构性布局改动。
+- 不移除现有控制按钮或功能入口。
+- 不重写歌词逻辑、播放逻辑或评论功能。
+- 不追求对 Apple Music 界面的像素级模仿。
 
-## Constraints
+## 约束
 
-- Existing layout must remain recognizable:
-  - left cover and metadata area
-  - right lyric area
-  - bottom playback control area
-- Existing interactions and settings must continue to work.
-- Reduced-motion support must be preserved.
-- The result should feel closer to Apple Music, but still belong to this project and its existing UI token system.
+- 现有布局必须保持可辨认：
+  - 左侧封面与元信息区域
+  - 右侧歌词区域
+  - 底部播放控制区域
+- 现有交互和设置项必须继续可用。
+- 必须保留对 reduced motion 的兼容。
+- 最终效果应更接近 Apple Music，但仍然属于当前项目及其现有设计令牌体系。
 
-## Design Principles
+## 设计原则
 
-### 1. Scene Over Panels
+### 1. 场景优先于面板
 
-The page should read as one immersive playback scene instead of multiple separate glass containers. Surfaces should still exist, but they should support the scene rather than compete with it.
+整个页面应该首先被感知为一个沉浸式播放场景，而不是多个独立玻璃容器的堆叠。表面层仍然存在，但它们应该服务于整体氛围，而不是彼此争夺注意力。
 
-### 2. Content Is The Hero
+### 2. 内容才是主角
 
-The cover image and current lyric line should carry the strongest visual emphasis. Supporting metadata and utility actions should remain readable but visually secondary.
+封面和当前歌词行应当拥有最强的视觉权重。元信息与辅助操作需要保持可读，但它们在视觉上必须明确退后。
 
-### 3. Atmosphere With Restraint
+### 3. 氛围感要克制
 
-Ambient blur, glow, and color diffusion should remain, but heavy overlays, thick card borders, and overly obvious glass treatment should be reduced.
+模糊、辉光和色彩扩散这些氛围元素要保留，但厚重遮罩、明显卡片边框和过于强烈的玻璃拟态需要适当收敛。
 
-### 4. Motion Should Guide Attention
+### 4. 动效用于引导注意力
 
-Animation should reinforce focus and continuity, especially around lyric progression and playback interactions. Motion must feel soft and intentional, not flashy.
+动画应当服务于焦点转换和空间连续性，尤其是在歌词推进和播放控制交互上。整体动效必须柔和、自然、有目的，而不是为了“炫”。
 
-## Current UI Assessment
+## 当前界面评估
 
-The current implementation already has a good foundation:
+当前实现已经具备不错的基础：
 
-- blurred cover-based background
-- large left cover area
-- large right lyric area with active-line emphasis
-- floating footer controls
-- reduced-motion handling in some components
+- 基于封面的模糊背景
+- 大面积的左侧封面区
+- 具备激活态强调的右侧大歌词区
+- 独立悬浮的底部控制栏
+- 在部分组件中已经考虑 reduced motion
 
-Main gaps relative to the target style:
+与目标风格相比，当前主要差距在于：
 
-- card boundaries are still visually prominent
-- some surfaces feel like separate widgets instead of one scene
-- metadata presentation is still somewhat field-like instead of content-like
-- lyric focus is good, but not yet strong enough to create a stage-lit active line feeling
-- footer controls are coherent, but still closer to a generic glass control bar than a premium playback cluster
+- 卡片边界仍然比较明显
+- 一些区域看起来更像独立组件，而不是同一场景中的不同层
+- 元信息呈现仍稍微偏“字段说明”，不够像内容展示
+- 歌词区的聚焦感已经不错，但还不够像“当前句被灯光照亮”
+- 底部控制栏已经较统一，但整体仍更像通用玻璃控制条，而不是高级播放器控制簇
 
-## Component Direction
+## 组件方向
 
-### Background
+### 背景
 
-Intent:
-Create a softer immersive environment driven by cover color and depth, rather than a thick dark veil.
+意图：
+通过封面主色与空间深度来营造更柔和的沉浸环境，而不是依赖一层厚重的深色遮罩。
 
-Changes:
+调整方向：
 
-- Reduce the sense of a uniform dark mask across the whole screen.
-- Let more cover-derived color come through the background stack.
-- Keep blur, but tune it from "smeared" toward "diffused color field".
-- Add a subtle center-weighted light focus around the cover area.
-- Keep vignette for focus, but make it lighter and more supportive than dramatic.
+- 降低全局统一深色遮罩的存在感。
+- 让更多封面主色能够透过背景层显现出来。
+- 保留模糊，但从“糊成一片”调整为“柔和的色彩扩散”。
+- 在封面周围加入轻微的中心聚光。
+- 保留暗角用于收焦，但它的作用应是辅助，而不是压迫。
 
-Desired effect:
-The screen should feel deeper, more colorful, and less gray-heavy.
+期望效果：
+背景更有深度、更有颜色，也更少灰闷感。
 
-### Cover Area
+### 封面区域
 
-Intent:
-Make the album art feel like the main physical object in the scene.
+意图：
+让专辑封面更像场景中的主视觉实体。
 
-Changes:
+调整方向：
 
-- Reduce the apparent thickness of the outer cover frame.
-- Keep rounded corners and soft highlight treatment, but avoid a picture-frame feeling.
-- Shift the shadow from dense and heavy to broader and softer.
-- Add very subtle edge light or top sheen if it supports premium depth without becoming decorative.
+- 降低外层封面容器的厚重感。
+- 保留圆角和柔和高光，但避免“相框感”。
+- 阴影从密集厚重改成更柔和、范围更大的悬浮阴影。
+- 如果不会显得刻意，可增加极轻的边缘亮感或顶部高光。
 
-Desired effect:
-The cover should feel anchored and premium, with more emphasis on the artwork itself than its container.
+期望效果：
+封面本身成为主角，容器只负责托住它，而不是抢它的风头。
 
-### Metadata Area
+### 元信息区域
 
-Intent:
-Present track information like content presentation, not like a labeled data sheet.
+意图：
+让歌曲信息更像内容展示，而不是标签化的数据表。
 
-Changes:
+调整方向：
 
-- Keep the current structure, but reduce label prominence.
-- Let the track name read as the strongest text block.
-- Keep singer information clearly visible, but lower than the title.
-- Keep album and playback state text as supporting information.
-- Increase whitespace rhythm slightly so the block breathes more naturally.
+- 保留当前结构，但降低标签文本的存在感。
+- 让歌名成为最强文本层级。
+- 歌手信息清晰可见，但层级低于歌名。
+- 专辑名和播放状态信息作为辅助层出现。
+- 适当增加留白与节奏，让这一块读起来更自然。
 
-Desired effect:
-Metadata should feel editorial and music-first while preserving readability and current layout constraints.
+期望效果：
+在不破坏现有布局约束的前提下，元信息看起来更像音乐内容展示。
 
-### Lyric Area
+### 歌词区域
 
-Intent:
-Make the lyric area feel spatial and focused, with the active line naturally illuminated.
+意图：
+让歌词区更有空间感，当前歌词行像自然被照亮一样被用户捕捉到。
 
-Changes:
+调整方向：
 
-- Reduce the visible sense of a dedicated lyric panel frame.
-- Keep the lyric mask gradient, but soften edge fade behavior.
-- Increase the contrast gap between active and inactive lyric lines.
-- Keep active-line scale modest and elegant rather than dramatic.
-- Make extended lyric text clearly subordinate to the main active line.
-- Preserve per-word playback highlighting, but make it feel like light progression rather than a technical overlay.
+- 降低歌词容器边框与面板感。
+- 保留现有歌词渐隐遮罩，但让顶部和底部过渡更柔和。
+- 加大当前行与非当前行之间的层级差。
+- 当前行保留放大，但幅度要克制、优雅。
+- 扩展歌词文本需明确弱于主歌词。
+- 保留逐字高亮，但让它更像光线推进，而不是技术效果覆盖。
 
-Desired effect:
-The eye should always find the active lyric line immediately, and the lyric area should feel less like a boxed widget.
+期望效果：
+用户视线能够第一时间找到当前歌词行，且歌词区整体更像漂浮在场景里的内容层，而不是一个独立大组件。
 
-### Lyric Motion
+### 歌词动效
 
-Intent:
-Improve continuity and calmness during lyric progression and manual lyric interaction.
+意图：
+让歌词推进和手动滚动时的观感更连续、更稳定。
 
-Changes:
+调整方向：
 
-- Favor soft opacity, subtle scale, and clarity shifts over aggressive movement.
-- Keep the current scroll behavior, but reduce any perception of abrupt jumps.
-- Ensure the skip-to-line affordance appears as a lightweight assistant layer.
+- 优先用透明度、轻微缩放和清晰度变化建立状态差，而不是用大位移制造戏剧感。
+- 保留当前滚动逻辑，但减少“突然被拉到目标位置”的感受。
+- 跳转当前行的辅助控件应更像轻量浮层。
 
-Desired effect:
-Lyrics should feel like they glide through focus rather than snap into place.
+期望效果：
+歌词像在焦点中平滑漂移，而不是突兀跳转。
 
-### Footer Controls
+### 底部控制栏
 
-Intent:
-Make the footer feel like a cohesive playback control system with a strong center anchor.
+意图：
+让底部区域更像一个统一的播放控制系统，并且有清晰的中心锚点。
 
-Changes:
+调整方向：
 
-- Retain the floating footer shell, but reduce its card thickness and separation from the scene.
-- Strengthen the hierarchy between primary playback controls and secondary utility actions.
-- Make the primary play/pause button feel like the central anchor.
-- Make previous and next feel visually grouped with the primary control rather than three separate pills.
-- Keep progress and timing readable, but let them support the playback cluster rather than compete with it.
+- 保留悬浮控制栏结构，但削弱其“单独一块面板”的厚重感。
+- 强化主播放控制与次级功能控制之间的层级差。
+- 让主播放按钮成为视觉中心。
+- 让上一首、播放/暂停、下一首更像同一组控制，而不是三个独立圆形按钮。
+- 进度与时间信息保持清晰，但在视觉上服务于主控制区，而不是与之竞争。
 
-Desired effect:
-The user should instantly understand where the main playback focus lives.
+期望效果：
+用户一眼就能识别核心播放控制区，并感知到底部是一套完整的播放系统。
 
-### Secondary Actions
+### 次级操作
 
-Intent:
-Preserve capability without visual noise.
+意图：
+保留功能完整性，同时减少视觉噪音。
 
-Changes:
+调整方向：
 
-- Keep all current secondary actions.
-- Lower their default visual prominence.
-- Use active state to show function clearly, without introducing many competing highlight colors.
-- Make the control row feel like one family of controls with consistent rhythm.
+- 保留当前所有次级操作入口。
+- 降低这些按钮在默认状态下的存在感。
+- 激活态要清楚，但避免引入过多互相竞争的强调色。
+- 让整组辅助按钮在节奏、尺寸和反馈上像同一家族。
 
-Desired effect:
-Useful controls remain discoverable, but they no longer compete with primary playback actions.
+期望效果：
+功能依旧好用，但不会和主播放控制争夺焦点。
 
-## Motion Guidelines
+## 动效规范
 
-- Animate only key layers:
-  - active lyric transitions
-  - button hover and press feedback
-  - footer and surface emphasis changes
-- Prefer soft easing and short durations.
-- Avoid large-distance movement.
-- Avoid "everything animates" behavior.
-- Respect `prefers-reduced-motion: reduce` by disabling or minimizing non-essential transitions.
+- 只对关键层做动画：
+  - 当前歌词行切换
+  - 按钮 hover 与按压反馈
+  - 底部与表面层的强调变化
+- 使用柔和的缓动和较短时长。
+- 避免大幅位移动效。
+- 避免“所有东西都在动”。
+- 通过 `prefers-reduced-motion: reduce` 降低或关闭非必要动效。
 
-## Visual Guidelines
+## 视觉规范
 
-- Reduce hard card edges.
-- Reduce heavy overlay opacity.
-- Favor soft depth over obvious frosted-glass slabs.
-- Use one consistent highlight language for active states.
-- Keep text contrast high enough for readability on dynamic backgrounds.
-- Preserve tabular numerals for playback time.
+- 减少生硬卡片边界。
+- 降低厚重遮罩的不透明度。
+- 倾向柔和景深，而不是强烈的玻璃板质感。
+- 激活态使用统一的高亮语言。
+- 在动态背景上维持足够文字对比度。
+- 保留播放时间的等宽数字表现。
 
-## Accessibility Considerations
+## 可访问性考虑
 
-- Maintain readable contrast for metadata, lyrics, and controls on top of dynamic backgrounds.
-- Keep focus and interaction states visible.
-- Preserve touch and click target usability for all control buttons.
-- Respect reduced motion.
-- Avoid relying on color alone to indicate active states where shape, opacity, or emphasis can also help.
+- 在动态背景上保持元信息、歌词与控制按钮的可读对比度。
+- 焦点态与交互态必须清晰可见。
+- 所有控制按钮都要保持足够的点击区域。
+- 保留 reduced motion 支持。
+- 激活态不要只依赖颜色表达，也应通过形态、透明度或强调程度体现。
 
-## Implementation Scope
+## 实现范围
 
-Primary files expected to change:
+预计主要修改文件：
 
 - `src/renderer/components/layout/PlayDetail/index.vue`
 - `src/renderer/components/layout/PlayDetail/LyricPlayer.vue`
 - `src/renderer/components/layout/PlayDetail/PlayBar.vue`
 - `src/renderer/components/layout/PlayDetail/components/ControlBtns.vue`
-- potentially play-detail header button styles if needed for visual consistency
+- 如有必要，可一并微调播放详情页头部按钮样式以保持一致性
 
-Possible supporting work:
+可能涉及的辅助工作：
 
-- small token reuse or additions if existing theme tokens are insufficient
-- modest transition tuning in shared styles only if required
+- 如果现有主题令牌不足，补充少量复用型 token
+- 如确有必要，对共享样式中的过渡参数做小范围微调
 
-## Acceptance Criteria
+## 验收标准
 
-- The page still uses the current layout and feature set.
-- The screen feels more like one immersive scene and less like several separate cards.
-- The cover image reads as the main visual object.
-- The active lyric line is easier to find immediately.
-- The footer control bar has a clearer primary-vs-secondary hierarchy.
-- The interface feels more premium and more Apple Music-adjacent without becoming flatter or more generic.
+- 页面仍然保持当前布局与功能结构。
+- 整个页面更像一个完整沉浸场景，而不是几块独立卡片。
+- 封面图是最明确的主视觉对象之一。
+- 当前歌词行更容易被快速识别。
+- 底部控制栏具备更清晰的主次层级。
+- 整体体验更高级、更接近 Apple Music，但不会变得更平、更泛化。
 
-## Testing Strategy
+## 测试策略
 
-- Visual QA on the play detail page in normal mode and fullscreen mode.
-- Verify behavior with long track names, long singer names, and album names.
-- Verify lyric readability with:
-  - short lines
-  - long wrapped lines
-  - extended lyrics
-  - line-by-line progression
-- Verify comment panel coexistence with the adjusted visual hierarchy.
-- Verify reduced-motion behavior.
-- Verify no regressions in:
-  - footer controls
-  - lyric skip affordance
-  - lyric selection mode
-  - desktop lyric toggle
+- 在普通模式和全屏模式下进行播放详情页视觉检查。
+- 验证长歌名、长歌手名、长专辑名的显示表现。
+- 验证以下歌词场景的可读性：
+  - 短歌词行
+  - 自动换行的长歌词行
+  - 含扩展歌词
+  - 逐行推进播放
+- 验证评论面板展开后与新视觉层级的共存表现。
+- 验证 reduced motion 下的行为。
+- 验证以下功能没有回归：
+  - 底部控制按钮
+  - 歌词跳转辅助控件
+  - 歌词选择模式
+  - 桌面歌词开关
 
-## Risks
+## 风险
 
-- Over-lightening the page could reduce lyric readability on some cover images.
-- Over-reducing surface boundaries could make information zones feel undefined.
-- Excessive active-line emphasis could become theatrical instead of refined.
-- Too much motion tuning could hurt clarity if it exceeds the current interaction cadence.
+- 如果页面整体提亮过多，某些封面图下的歌词可读性可能下降。
+- 如果表面边界削弱过头，信息区域可能会显得不够明确。
+- 如果当前歌词行强调过度，整体观感可能会变得过于戏剧化。
+- 如果动效调整太多，可能反而削弱当前交互节奏的清晰度。
 
-## Decisions Made
+## 已确认决策
 
-- Preserve current page structure.
-- Deepen visual and interaction quality rather than redesign layout.
-- Aim for Apple Music influence through polish and focus behavior, not literal imitation.
-- Keep the current immersive mood rather than replacing it with a flatter minimalist style.
+- 保留当前页面结构。
+- 重点深化视觉与交互质感，而不是重做布局。
+- 通过细节打磨和焦点引导去靠近 Apple Music，而不是照搬其界面。
+- 保留当前已有的沉浸式氛围，而不是改成更扁平、更克制的极简风。
