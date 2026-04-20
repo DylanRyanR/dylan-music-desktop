@@ -237,11 +237,11 @@ export default {
       line-height: 1.24;
       padding: calc(var(--playDetail-lrc-font-size, 16px) / 2.4) 12px;
       overflow-wrap: break-word;
-      color: rgba(255, 255, 255, .56);
       opacity: .78;
+      transform: scale(.992);
+      text-shadow: 0 1px 10px rgba(0, 0, 0, .18);
       transition: @transition-normal;
-      transition-property: padding, opacity, transform, filter;
-      filter: saturate(.82) blur(.2px);
+      transition-property: padding, opacity, transform, text-shadow;
 
       .extended {
         font-size: 0.78em;
@@ -257,10 +257,9 @@ export default {
       &.active {
         opacity: 1;
         transform: scale(1.018);
-        filter: saturate(1.04);
+        text-shadow: 0 2px 18px rgba(0, 0, 0, .24);
 
         .font-lrc {
-          color: #fff;
           text-shadow:
             0 0 28px rgba(255, 255, 255, .16),
             0 4px 22px rgba(0, 0, 0, .34);
