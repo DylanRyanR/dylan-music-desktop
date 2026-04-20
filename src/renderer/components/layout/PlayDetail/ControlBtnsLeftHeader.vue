@@ -25,39 +25,59 @@ import { setShowPlayerDetail } from '@renderer/store/player/action'
 import { closeWindow, minWindow, setFullScreen } from '@renderer/utils/ipc'
 
 const dom_btns = ref()
-
 const cssModule = useCssModule()
 
 const handle_focus = () => {
   if (!dom_btns.value) return
-  dom_btns.value.classList.remove(cssModule.hover)
+  for (const node of dom_btns.value.childNodes) {
+    if (node.tagName != 'BUTTON') continue
+    node.classList.remove(cssModule.hover)
+  }
 }
-const handle_mouseenter = () => {
-  dom_btns.value.classList.add(cssModule.hover)
+const getBtnEl = (el) => {
+  let current = el
+  while (current) {
+    if (current.tagName == 'BUTTON') return current
+    current = current.parentNode
+  }
+  return null
 }
-const handle_mouseleave = () => {
-  dom_btns.value.classList.remove(cssModule.hover)
+const handle_mouseover = (event) => {
+  const btn = getBtnEl(event.target)
+  if (!btn) return
+  btn.classList.add(cssModule.hover)
+}
+const handle_mouseout = (event) => {
+  const btn = getBtnEl(event.target)
+  if (!btn) return
+  btn.classList.remove(cssModule.hover)
 }
 
 
 onMounted(() => {
   window.app_event.on('focus', handle_focus)
-  dom_btns.value.addEventListener('mouseenter', handle_mouseenter)
-  dom_btns.value.addEventListener('mouseleave', handle_mouseleave)
+  dom_btns.value.addEventListener('mouseover', handle_mouseover)
+  dom_btns.value.addEventListener('mouseout', handle_mouseout)
 })
 onBeforeUnmount(() => {
   window.app_event.off('focus', handle_focus)
-  dom_btns.value.removeEventListener('mouseenter', handle_mouseenter)
-  dom_btns.value.removeEventListener('mouseleave', handle_mouseleave)
+  dom_btns.value.removeEventListener('mouseover', handle_mouseover)
+  dom_btns.value.removeEventListener('mouseout', handle_mouseout)
 })
 
 
 const hide = () => {
-  dom_btns.value?.classList.remove(cssModule.hover)
+  for (const node of dom_btns.value?.childNodes ?? []) {
+    if (node.tagName != 'BUTTON') continue
+    node.classList.remove(cssModule.hover)
+  }
   setShowPlayerDetail(false)
 }
 const fullscreenExit = () => {
-  dom_btns.value?.classList.remove(cssModule.hover)
+  for (const node of dom_btns.value?.childNodes ?? []) {
+    if (node.tagName != 'BUTTON') continue
+    node.classList.remove(cssModule.hover)
+  }
   void setFullScreen(false).then((fullscreen) => {
     isFullscreen.value = fullscreen
   })
@@ -124,28 +144,29 @@ const fullscreenExit = () => {
     height: auto;
     opacity: 1;
 
-    &.hover {
-      .controBtnIcon {
-        opacity: 1;
-      }
-    }
-
     button {
-      width: 34px;
-      height: 34px;
+      width: 38px;
+      height: 38px;
       border-radius: 999px;
-      color: rgba(255, 255, 255, .9);
+      color: rgba(255, 255, 255, .88);
+      background: rgba(255, 255, 255, .06);
       box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, .08),
-        0 8px 18px rgba(0, 0, 0, .12);
+        inset 0 1px 0 rgba(255, 255, 255, .06),
+        0 6px 14px rgba(0, 0, 0, .10);
       transition: @transition-fast;
-      transition-property: transform, background-color, opacity, box-shadow;
+      transition-property: background-color, transform, color, box-shadow;
       + button {
         margin-right: 0;
       }
 
-      &:hover {
-        transform: translateY(-1px);
+      &.hover {
+        transform: scale(1.02);
+        background-color: rgba(255, 255, 255, .12);
+        color: #fff;
+
+        &.close {
+          background-color: color-mix(in srgb, var(--color-btn-close) 82%, rgba(255, 255, 255, .08));
+        }
       }
 
       &:active {
@@ -168,16 +189,14 @@ const fullscreenExit = () => {
   }
 
   .controBtnIcon {
-    opacity: .96;
-    transition: opacity 0.2s ease-in-out;
+    opacity: 1;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .header {
     .controBtn {
-      button,
-      .controBtnIcon {
+      button {
         transition: none;
       }
     }

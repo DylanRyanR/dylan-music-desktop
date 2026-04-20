@@ -125,7 +125,7 @@ export default {
     opacity: 1;
     cursor: pointer;
     transition: @transition-fast;
-    transition-property: opacity, transform, background-color, color;
+    transition-property: opacity, transform, background-color, color, box-shadow;
     display: flex;
     align-items: center;
     justify-content: center;
