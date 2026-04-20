@@ -248,6 +248,15 @@ export default {
     :global {
       .left {
         flex-basis: 18%;
+        .title {
+          font-size: 22px;
+          line-height: 1.22;
+        }
+        .subtitle {
+          margin-top: 8px;
+          font-size: 13px;
+          line-height: 1.45;
+        }
         .metaValue {
           font-size: 12px;
         }
@@ -325,6 +334,8 @@ export default {
   line-height: 1.18;
   font-weight: 700;
   color: #fff;
+  overflow-wrap: anywhere;
+  word-break: break-word;
   text-shadow: 0 4px 18px rgba(0, 0, 0, .22);
 }
 .subtitle {
@@ -333,6 +344,8 @@ export default {
   line-height: 1.5;
   font-weight: 600;
   color: rgba(255, 255, 255, .74);
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 .metaRow {
   display: grid;
