@@ -140,6 +140,7 @@ export default {
   flex-flow: row nowrap;
   align-items: center;
   justify-content: space-between;
+  min-height: @ui-control-height-xl;
   gap: @ui-gap-md;
 }
 

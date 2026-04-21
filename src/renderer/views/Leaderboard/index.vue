@@ -97,7 +97,8 @@ export default {
   width: 100%;
   display: flex;
   flex-flow: row nowrap;
-
+  min-height: @ui-control-height-xl;
+  gap: @ui-gap-md;
 }
 .tab {
   flex: auto;
@@ -137,13 +138,8 @@ export default {
     width: 100%;
   }
   :global(.label-content) {
-    background-color: transparent !important;
-    line-height: 38px;
-    height: 38px;
-    border-radius: 0;
-    &:hover {
-      background: none !important;
-    }
+    border-radius: @ui-radius-md;
+    min-height: @ui-control-height-md;
   }
   :global(.label) {
     color: var(--color-font) !important;
@@ -154,11 +150,10 @@ export default {
   }
 
   :global(.selection-list) {
-    max-height: 500px;
-    box-shadow: 0 1px 8px 0 rgba(0,0,0,.2);
+    box-shadow: @ui-shadow-1;
+    border-radius: @ui-radius-md;
     li {
       // background-color: var(--color-main-background);
-      line-height: 38px;
       font-size: 13px;
       &:hover {
         background-color: var(--color-button-background-hover);

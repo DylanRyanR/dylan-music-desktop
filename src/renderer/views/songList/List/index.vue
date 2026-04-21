@@ -130,6 +130,8 @@ export default {
   width: 100%;
   display: flex;
   flex-flow: row nowrap;
+  min-height: @ui-control-height-xl;
+  gap: @ui-gap-md;
   // padding-right: 5px;
   // box-sizing: border-box;
   padding-bottom: 5px;
@@ -165,20 +167,8 @@ export default {
 
   :global {
     .label-content {
-      background-color: transparent !important;
-      transition: color @transition-fast;
-      color: var(--color-font);
-      // line-height: 38px;
-      // height: 38px;
-      border-radius: 0;
-      &:hover {
-        // background: none !important;
-        color: var(--color-primary-font-hover);
-        .icon {
-          opacity: 1;
-          // color: var(--color-primary-font-hover);
-        }
-      }
+      border-radius: @ui-radius-md;
+      min-height: @ui-control-height-md;
     }
     // .label {
     //   color: var(--color-font) !important;
@@ -193,12 +183,11 @@ export default {
     }
 
     .selection-list {
-      max-height: 500px;
-      box-shadow: 0 1px 4px 0 rgba(0,0,0,.2);
+      box-shadow: @ui-shadow-1;
+      border-radius: @ui-radius-md;
       li {
         // background-color: var(--color-main-background);
         text-align: center;
-        line-height: 38px;
         font-size: 13px;
         &:hover {
           background-color: var(--color-button-background-hover);
