@@ -74,17 +74,17 @@ const {
 
 .footerShell {
   width: 100%;
-  min-height: 88px;
+  min-height: 84px;
   display: flex;
   align-items: center;
   gap: 18px;
-  padding: 14px 18px;
-  border-radius: 22px;
-  background: linear-gradient(180deg, rgba(8, 10, 18, .18) 0%, rgba(8, 10, 18, .28) 100%);
+  padding: 12px 16px;
+  border-radius: 26px;
+  background: linear-gradient(180deg, rgba(8, 10, 18, .12) 0%, rgba(8, 10, 18, .20) 100%);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, .09),
-    0 18px 42px rgba(0, 0, 0, .16);
-  backdrop-filter: blur(16px);
+    inset 0 1px 0 rgba(255, 255, 255, .07),
+    0 18px 34px rgba(0, 0, 0, .12);
+  backdrop-filter: blur(14px);
 }
 
 .footerLeft {
@@ -105,8 +105,8 @@ const {
 
 .progressContent {
   position: relative;
-  height: 16px;
-  padding: 5px 0;
+  height: 14px;
+  padding: 4px 0;
   width: 100%;
 }
 
@@ -127,7 +127,7 @@ const {
   align-items: center;
   gap: 8px;
   min-width: 0;
-  color: rgba(255, 255, 255, .82);
+  color: rgba(255, 255, 255, .72);
   font-variant-numeric: tabular-nums;
 }
 
@@ -137,13 +137,13 @@ const {
   font-size: 12px;
   line-height: 1.4;
   font-weight: 600;
-  color: rgba(255, 255, 255, .68);
+  color: rgba(255, 255, 255, .58);
   .mixin-ellipsis-1();
 }
 
 .timeValue,
 .timeDivider {
-  font-size: 13px;
+  font-size: 12px;
   line-height: 1.4;
 }
 
@@ -156,22 +156,25 @@ const {
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  padding: 0 4px 0 10px;
   color: rgba(255, 255, 255, .92);
 }
 
 .playBtn {
-  width: 42px;
-  height: 42px;
+  width: 40px;
+  height: 40px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 0;
   border: none;
   border-radius: 999px;
-  background: color-mix(in srgb, rgba(255, 255, 255, .12) 78%, transparent);
+  background: rgba(255, 255, 255, .10);
   color: rgba(255, 255, 255, .9);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .06),
+    0 8px 18px rgba(0, 0, 0, .10);
   transition: @transition-fast;
   transition-property: opacity, transform, background-color, color, box-shadow;
   cursor: pointer;
@@ -184,8 +187,8 @@ const {
   }
 
   &:hover {
-    transform: translateY(-1px);
-    background: color-mix(in srgb, rgba(255, 255, 255, .18) 82%, transparent);
+    transform: translateY(0) scale(1.02);
+    background: rgba(255, 255, 255, .16);
     color: #fff;
   }
 
@@ -195,13 +198,13 @@ const {
 }
 
 .playBtnPrimary {
-  width: 50px;
-  height: 50px;
-  background: color-mix(in srgb, var(--color-primary) 82%, rgba(255, 255, 255, .12));
+  width: 54px;
+  height: 54px;
+  background: color-mix(in srgb, var(--color-primary) 88%, rgba(255, 255, 255, .10));
   color: #fff;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, .14),
-    0 14px 26px rgba(0, 0, 0, .18);
+    inset 0 1px 0 rgba(255, 255, 255, .16),
+    0 16px 28px rgba(0, 0, 0, .18);
 
   svg {
     width: 22px;
@@ -209,7 +212,12 @@ const {
   }
 
   &:hover {
-    background: color-mix(in srgb, var(--color-primary) 90%, rgba(255, 255, 255, .12));
+    background: color-mix(in srgb, var(--color-primary) 88%, rgba(255, 255, 255, .10));
+    transform: scale(1.03);
+  }
+
+  &:active {
+    transform: scale(.97);
   }
 }
 

@@ -17,18 +17,15 @@ transition(enter-active-class="animated slideInRight" leave-active-class="animat
             img(v-if="musicInfo.pic" :class="$style.img" :src="musicInfo.pic")
             div(v-else :class="$style.imgPlaceholder")
           div.description(:class="['scroll', $style.description]")
-            div(:class="$style.metaRow")
-              span(:class="$style.metaLabel") {{ $t('player__music_name') }}
-              span(:class="$style.metaValue") {{ musicInfo.name }}
-            div(:class="$style.metaRow")
-              span(:class="$style.metaLabel") {{ $t('player__music_singer') }}
-              span(:class="$style.metaValue") {{ musicInfo.singer }}
+            h1(:class="$style.title") {{ musicInfo.name }}
+            p(:class="$style.subtitle") {{ musicInfo.singer }}
             div(v-if="musicInfo.album" :class="$style.metaRow")
               span(:class="$style.metaLabel") {{ $t('player__music_album') }}
               span(:class="$style.metaValue") {{ musicInfo.album }}
             div(:class="$style.metaAccent")
               span(:class="$style.metaAccentLine")
-              span(:class="$style.metaAccentText") {{ status || $t('player__play') }} · {{ nowPlayTimeStr }} / {{ maxPlayTimeStr }}
+              span(:class="$style.metaAccentText")
+                | {{ status || $t('player__play') }} &#183; {{ nowPlayTimeStr }} / {{ maxPlayTimeStr }}
 
       transition(enter-active-class="animated fadeIn" leave-active-class="animated fadeOut")
         LyricPlayer(v-if="visibled")
@@ -206,26 +203,27 @@ export default {
 .bgTheme {
   background: var(--background-image) var(--background-image-position) no-repeat;
   background-size: var(--background-image-size);
-  opacity: .42;
+  opacity: .32;
 }
 .bgCover {
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
-  filter: blur(42px) saturate(1.08);
-  transform: scale(1.16);
-  opacity: .82;
+  filter: blur(48px) saturate(1.12);
+  transform: scale(1.12);
+  opacity: .88;
   transition: opacity @transition-slow, transform @transition-slow;
 }
 .bgOverlay {
   background:
-    linear-gradient(180deg, rgba(8, 10, 18, 0.34) 0%, rgba(8, 10, 18, 0.52) 100%),
-    color-mix(in srgb, var(--color-app-background) 84%, transparent);
-  backdrop-filter: blur(10px);
+    radial-gradient(circle at 24% 28%, rgba(255, 255, 255, .12) 0%, rgba(255, 255, 255, 0) 28%),
+    linear-gradient(180deg, rgba(6, 8, 16, .18) 0%, rgba(6, 8, 16, .42) 100%),
+    color-mix(in srgb, var(--color-app-background) 72%, transparent);
+  backdrop-filter: blur(12px);
 }
 .bgVignette {
   background:
-    radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, .08) 56%, rgba(0, 0, 0, .32) 100%);
+    radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, .06) 58%, rgba(0, 0, 0, .24) 100%);
 }
 // .bg2 {
 //   position: absolute;
@@ -247,23 +245,32 @@ export default {
   position: relative;
 
   &.showComment {
-    :global {
-      .left {
-        flex-basis: 18%;
-        .metaValue {
-          font-size: 12px;
-        }
+    .left {
+      flex-basis: 18%;
+      .title {
+        font-size: 22px;
+        line-height: 1.22;
       }
+      .subtitle {
+        margin-top: 8px;
+        font-size: 13px;
+        line-height: 1.45;
+      }
+      .metaValue {
+        font-size: 12px;
+      }
+    }
+    :global {
       .right {
         flex-basis: 30%;
         .lyricSelectContent {
           font-size: 14px;
         }
       }
-      .comment {
-        opacity: 1;
-        transform: scaleX(1);
-      }
+    }
+    .comment {
+      opacity: 1;
+      transform: scaleX(1);
     }
   }
 }
@@ -289,13 +296,12 @@ export default {
   position: relative;
   width: 100%;
   aspect-ratio: 1 / 1;
-  border-radius: 24px;
-  padding: 16px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, .08) 0%, rgba(255, 255, 255, .05) 100%);
+  border-radius: 26px;
+  padding: 12px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .07) 0%, rgba(255, 255, 255, .03) 100%);
   box-shadow:
-    0 24px 64px rgba(0, 0, 0, .22),
-    inset 0 1px 0 rgba(255, 255, 255, .12);
-  backdrop-filter: blur(14px);
+    0 28px 70px rgba(0, 0, 0, .22),
+    inset 0 1px 0 rgba(255, 255, 255, .10);
 }
 .img,
 .imgPlaceholder {
@@ -306,7 +312,7 @@ export default {
 .img {
   display: block;
   object-fit: cover;
-  box-shadow: 0 18px 38px rgba(0, 0, 0, .28);
+  box-shadow: 0 22px 48px rgba(0, 0, 0, .24);
 }
 .imgPlaceholder {
   background: linear-gradient(135deg, rgba(255, 255, 255, .1), rgba(255, 255, 255, .03));
@@ -314,21 +320,39 @@ export default {
 }
 .description {
   max-width: 372px;
-  margin-top: 18px;
-  padding: 18px 20px 20px;
+  margin-top: 22px;
+  padding: 14px 4px 0;
   min-height: 0;
-  border-radius: 20px;
-  background: linear-gradient(180deg, rgba(8, 10, 18, .16) 0%, rgba(8, 10, 18, .24) 100%);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, .08),
-    0 18px 40px rgba(0, 0, 0, .12);
-  backdrop-filter: blur(14px);
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.title {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1.18;
+  font-weight: 700;
+  color: #fff;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  text-shadow: 0 4px 18px rgba(0, 0, 0, .22);
+}
+.subtitle {
+  margin: 10px 0 0;
+  font-size: 15px;
+  line-height: 1.5;
+  font-weight: 600;
+  color: rgba(255, 255, 255, .74);
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 .metaRow {
   display: grid;
   grid-template-columns: minmax(68px, 84px) minmax(0, 1fr);
   gap: 14px;
   align-items: start;
+  margin-top: 18px;
 
   & + .metaRow {
     margin-top: 12px;
@@ -339,13 +363,13 @@ export default {
   line-height: 1.45;
   letter-spacing: .08em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, .54);
+  color: rgba(255, 255, 255, .42);
 }
 .metaValue {
   font-size: 15px;
   line-height: 1.55;
   font-weight: 600;
-  color: rgba(255, 255, 255, .92);
+  color: rgba(255, 255, 255, .94);
   overflow-wrap: break-word;
   text-shadow: 0 1px 2px rgba(0, 0, 0, .22);
 }
@@ -392,7 +416,7 @@ export default {
   }
 
   .description {
-    padding: 16px 18px 18px;
+    padding: 12px 0 0;
   }
 }
 
@@ -402,17 +426,5 @@ export default {
     transition: none;
   }
 }
-
-.comment {
-  position: absolute;
-  right: 0;
-  top: 0;
-  width: 50%;
-  height: 100%;
-  opacity: 1;
-  margin-left: 10px;
-  transform: scaleX(0);
-}
-
 
 </style>
