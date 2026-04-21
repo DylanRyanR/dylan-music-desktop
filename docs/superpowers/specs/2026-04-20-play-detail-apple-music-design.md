@@ -267,3 +267,8 @@
 - 重点深化视觉与交互质感，而不是重做布局。
 - 通过细节打磨和焦点引导去靠近 Apple Music，而不是照搬其界面。
 - 保留当前已有的沉浸式氛围，而不是改成更扁平、更克制的极简风。
+## Global Consistency Addendum
+
+- Components must prefer `--ui-*` semantic tokens.
+- Focus-visible is required for interactive controls.
+- Reduced-motion behavior must be preserved for major transitions.
