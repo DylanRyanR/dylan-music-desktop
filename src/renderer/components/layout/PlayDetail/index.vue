@@ -171,7 +171,8 @@ export default {
   height: 100%;
   top: 0;
   left: 0;
-  background-color: var(--color-content-background);
+  background-color: var(--ui-surface-2);
+  box-shadow: @ui-shadow-1;
   transition: background-color @ui-transition-normal, box-shadow @ui-transition-normal;
   z-index: 10;
   // -webkit-app-region: drag;

@@ -136,7 +136,7 @@ body {
   flex: auto;
   display: flex;
   flex-flow: column nowrap;
-  transition: background-color @transition-normal;
+  transition: background-color @ui-transition-normal, box-shadow @ui-transition-normal;
   background-color: var(--ui-surface-2);
 
   border-top-left-radius: @radius-border;
