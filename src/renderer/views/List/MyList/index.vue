@@ -258,7 +258,7 @@ export default {
 <style lang="less" module>
 @import '@renderer/assets/styles/layout.less';
 
-@lists-item-height: 36px;
+@lists-item-height: @ui-row-height-md;
 .lists {
   flex: none;
   width: 16%;
@@ -281,6 +281,7 @@ export default {
   font-size: 12px;
   line-height: 38px;
   padding: 0 10px;
+  color: var(--ui-text-secondary);
   .mixin-ellipsis-1();
 }
 .headerBtns {
@@ -331,23 +332,22 @@ export default {
 }
 .listsItem {
   position: relative;
+  min-height: @ui-row-height-md;
   transition: .3s ease;
   transition-property: color, background-color, opacity;
   background-color: transparent;
-  &:not(.active) {
-    &:hover {
-      background-color: var(--color-primary-background-hover);
-      cursor: pointer;
-    }
+  &:hover:not(.active) {
+    background-color: var(--ui-list-row-hover);
+    cursor: pointer;
   }
   &.active {
-    color: var(--color-primary);
+    color: var(--ui-accent);
   }
   &.selected {
     background-color: var(--color-primary-font-active);
   }
   &.clicked {
-    background-color: var(--color-primary-background-hover);
+    background-color: var(--ui-list-row-selected);
   }
   &.fetching {
     opacity: .5;
@@ -368,6 +368,7 @@ export default {
   height: @lists-item-height;
   padding: 0 10px;
   line-height: @lists-item-height;
+  color: var(--ui-text-primary);
   .mixin-ellipsis-1();
 }
 .listsGroupLabel {

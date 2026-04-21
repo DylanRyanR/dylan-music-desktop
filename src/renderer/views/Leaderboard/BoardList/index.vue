@@ -104,22 +104,23 @@ defineExpose({ hideMenu: handleMenuClick })
 }
 .listsItem {
   position: relative;
+  min-height: @ui-row-height-md;
   transition: .3s ease;
   transition-property: color, background-color;
   background-color: transparent;
   &:hover:not(.active) {
-    background-color: var(--color-primary-background-hover);
+    background-color: var(--ui-list-row-hover);
     cursor: pointer;
   }
   &.active {
     // background-color:
-    color: var(--color-primary);
+    color: var(--ui-accent);
   }
   &.selected {
     background-color: var(--color-primary-font-active);
   }
   &.clicked {
-    background-color: var(--color-primary-background-hover);
+    background-color: var(--ui-list-row-selected);
   }
   &.editing {
     padding: 0 10px;
@@ -143,7 +144,8 @@ defineExpose({ hideMenu: handleMenuClick })
   height: 100%;
   padding: 0 10px;
   font-size: 13px;
-  line-height: 36px;
+  line-height: @ui-row-height-md;
+  color: var(--ui-text-primary);
   .mixin-ellipsis-1();
 }
 

@@ -57,7 +57,9 @@
         </base-virtualized-list>
       </div>
       <div v-else :class="$style.noItem">
-        <p v-text="$t('no_item')" />
+        <div :class="$style.noItemContent">
+          <p v-text="$t('no_item')" />
+        </div>
       </div>
       <base-menu v-model="isShowItemMenu" :menus="menus" :xy="menuLocation" item-name="name" @menu-click="handleMenuClick" />
       <!-- <base-menu :menus="listItemMenu" :location="listMenu.menuLocation" item-name="name" :is-show="listMenu.isShowItemMenu" @menu-click="handleListItemMenuClick" /> -->
@@ -253,6 +255,7 @@ export default {
   flex-flow: column nowrap;
 
   :global(.list-item) {
+    min-height: @ui-row-height-md;
     &.active {
       color: var(--color-button-font);
     }
@@ -294,11 +297,18 @@ export default {
   flex-flow: column nowrap;
   justify-content: center;
   align-items: center;
+}
 
-  p {
-    font-size: 24px;
-    color: var(--color-font-label);
-  }
+.noItemContent {
+  padding: @ui-gap-xl;
+  border-radius: @ui-radius-lg;
+  background-color: var(--ui-surface-1);
+  box-shadow: @ui-shadow-1;
+}
+
+.noItemContent p {
+  font-size: 24px;
+  color: var(--ui-text-secondary);
 }
 
 </style>
