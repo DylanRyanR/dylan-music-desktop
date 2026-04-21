@@ -172,6 +172,7 @@ export default {
   top: 0;
   left: 0;
   background-color: var(--color-content-background);
+  transition: background-color @ui-transition-normal, box-shadow @ui-transition-normal;
   z-index: 10;
   // -webkit-app-region: drag;
   overflow: hidden;
