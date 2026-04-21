@@ -28,7 +28,7 @@
             :class="[{[$style.active]: playTaskId == item.id }, { selected: rightClickSelectedIndex == index }, { active: selectedList.includes(item) }]"
             @click="handleListItemClick($event, index)" @contextmenu="handleListItemRightClick($event, index)"
           >
-            <div class="list-item-cell no-select" :class="$style.num" style="flex: 0 0 5%;">
+            <div class="list-item-cell no-select" :class="[$style.num, $style.secondaryCell]" style="flex: 0 0 5%;">
               <transition name="play-active">
                 <div v-if="playTaskId == item.id" :class="$style.playIcon">
                   <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink" height="50%" viewBox="0 0 512 512" space="preserve">
@@ -38,12 +38,12 @@
                 <div v-else class="num">{{ index + 1 }}</div>
               </transition>
             </div>
-            <div class="list-item-cell auto name">
+            <div class="list-item-cell auto name" :class="$style.primaryCell">
               <span class="select name" :aria-label="getName(item)">{{ getName(item) }}</span>
             </div>
-            <div class="list-item-cell" style="flex: 0 0 20%;">{{ item.progress }}%<span v-if="item.status == downloadStatus.RUN && item.speed"> - {{ item.speed }}/s</span></div>
-            <div class="list-item-cell" style="flex: 0 0 22%;" :aria-label="item.statusText">{{ item.statusText }}</div>
-            <div class="list-item-cell" style="flex: 0 0 10%;">{{ getTypeName(item.metadata.quality) }}</div>
+            <div class="list-item-cell" :class="$style.secondaryCell" style="flex: 0 0 20%;">{{ item.progress }}%<span v-if="item.status == downloadStatus.RUN && item.speed"> - {{ item.speed }}/s</span></div>
+            <div class="list-item-cell" :class="$style.secondaryCell" style="flex: 0 0 22%;" :aria-label="item.statusText">{{ item.statusText }}</div>
+            <div class="list-item-cell" :class="$style.secondaryCell" style="flex: 0 0 10%;">{{ getTypeName(item.metadata.quality) }}</div>
             <div class="list-item-cell" style="flex: 0 0 13%; padding-left: 0; padding-right: 0;">
               <material-list-buttons
                 :index="index" :download-btn="false" :file-btn="item.status != downloadStatus.ERROR" remove-btn="remove-btn"
@@ -257,9 +257,15 @@ export default {
   :global(.list-item) {
     min-height: @ui-row-height-md;
     &.active {
-      color: var(--color-button-font);
+      color: var(--ui-text-primary);
     }
   }
+}
+.primaryCell {
+  color: var(--ui-text-primary);
+}
+.secondaryCell {
+  color: var(--ui-text-secondary);
 }
 .num {
   height: 100%;
@@ -278,7 +284,7 @@ export default {
   align-items: center;
   justify-content: center;
 
-  color: var(--color-button-font);
+  color: var(--ui-accent);
   opacity: .7;
 }
 
