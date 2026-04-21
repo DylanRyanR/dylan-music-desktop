@@ -190,10 +190,10 @@ export default {
         text-align: center;
         font-size: 13px;
         &:hover {
-          background-color: var(--color-button-background-hover);
+          background-color: var(--ui-popover-hover);
         }
         &:active {
-          background-color: var(--color-button-background-active);
+          background-color: var(--ui-popover-active);
         }
       }
     }
