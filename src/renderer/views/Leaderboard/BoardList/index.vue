@@ -105,6 +105,7 @@ defineExpose({ hideMenu: handleMenuClick })
 .listsItem {
   position: relative;
   min-height: @ui-row-height-md;
+  color: var(--ui-text-primary);
   transition: .3s ease;
   transition-property: color, background-color;
   background-color: transparent;
@@ -145,7 +146,7 @@ defineExpose({ hideMenu: handleMenuClick })
   padding: 0 10px;
   font-size: 13px;
   line-height: @ui-row-height-md;
-  color: var(--ui-text-primary);
+  color: inherit;
   .mixin-ellipsis-1();
 }
 

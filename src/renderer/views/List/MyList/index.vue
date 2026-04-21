@@ -333,6 +333,7 @@ export default {
 .listsItem {
   position: relative;
   min-height: @ui-row-height-md;
+  color: var(--ui-text-primary);
   transition: .3s ease;
   transition-property: color, background-color, opacity;
   background-color: transparent;
@@ -368,7 +369,7 @@ export default {
   height: @lists-item-height;
   padding: 0 10px;
   line-height: @lists-item-height;
-  color: var(--ui-text-primary);
+  color: inherit;
   .mixin-ellipsis-1();
 }
 .listsGroupLabel {
