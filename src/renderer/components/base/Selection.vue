@@ -1,6 +1,17 @@
 <template>
   <div class="content" :class="[$style.select, show ? $style.active : '']">
-    <div ref="dom_btn" class="label-content" :class="$style.label" @click="handleShow">
+    <div
+      ref="dom_btn"
+      class="label-content"
+      :class="$style.label"
+      role="button"
+      tabindex="0"
+      aria-haspopup="listbox"
+      :aria-expanded="show"
+      @click="handleShow"
+      @keydown.enter.prevent="handleShow"
+      @keydown.space.prevent="handleShow"
+    >
       <span class="label">{{ label }}</span>
       <div class="icon" :class="$style.icon">
         <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink" height="100%" viewBox="0 0 451.847 451.847" space="preserve">
@@ -8,11 +19,16 @@
         </svg>
       </div>
     </div>
-    <ul v-if="show" ref="dom_list" class="selection-list scroll" :class="$style.list" :style="listStyles">
+    <ul v-if="show" ref="dom_list" class="selection-list scroll" :class="$style.list" :style="listStyles" role="listbox">
       <li
         v-for="(item, index) in list" :key="index" :class="[$style.listItem, (itemKey ? item[itemKey] : item) == modelValue ? $style.active : null]"
+        role="option"
+        :aria-selected="(itemKey ? item[itemKey] : item) == modelValue"
         tabindex="0"
-        :aria-label="itemName ? item[itemName] : item" @click="handleClick(item)"
+        :aria-label="itemName ? item[itemName] : item"
+        @click="handleClick(item)"
+        @keydown.enter.prevent="handleClick(item)"
+        @keydown.space.prevent="handleClick(item)"
       >
         {{ itemName ? item[itemName] : item }}
       </li>

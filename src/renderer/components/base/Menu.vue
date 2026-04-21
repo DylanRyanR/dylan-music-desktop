@@ -1,17 +1,19 @@
 <template>
   <teleport to="#root">
-    <ul ref="dom_menu" :class="$style.list" :style="menuStyles" role="toolbar" :aria-hidden="!modelValue">
+    <ul ref="dom_menu" :class="$style.list" :style="menuStyles" role="menu" :aria-hidden="!modelValue">
       <li
         v-for="item in menus"
         v-show="!item.hide && (item.action == 'download' ? appSetting['download.enable'] : true)"
         :key="item.action"
         :class="$style.listItem"
-        role="tab"
+        role="menuitem"
         tabindex="0"
         :aria-label="item[itemName]"
         ignore-tip
         :disabled="item.disabled ? true : null"
         @click="menuClick(item)"
+        @keydown.enter.prevent="menuClick(item)"
+        @keydown.space.prevent="menuClick(item)"
       >
         {{ item[itemName] }}
       </li>
@@ -117,6 +119,9 @@ export default {
   }
   &:active {
     background-color: var(--ui-popover-active);
+  }
+  &:focus-visible {
+    box-shadow: inset 0 0 0 2px var(--ui-focus-ring);
   }
 
   &[disabled] {
