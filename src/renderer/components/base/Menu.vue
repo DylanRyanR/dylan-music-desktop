@@ -91,9 +91,9 @@ export default {
   transform-origin: 0 0 0;
   transition: .14s ease;
   transition-property: transform, opacity;
-  border-radius: @radius-border;
-  background-color: var(--color-content-background);
-  box-shadow: 0 1px 8px 0 rgba(0,0,0,.2);
+  border-radius: @ui-radius-md;
+  background-color: var(--ui-popover-bg);
+  box-shadow: @ui-shadow-1;
   z-index: 10;
   overflow: hidden;
   // will-change: transform;
@@ -113,10 +113,10 @@ export default {
   // background-color: var(--color-primary-light-600-alpha-800);
 
   &:hover {
-    background-color: var(--color-primary-background-hover);
+    background-color: var(--ui-popover-hover);
   }
   &:active {
-    background-color: var(--color-primary-background-active);
+    background-color: var(--ui-popover-active);
   }
 
   &[disabled] {

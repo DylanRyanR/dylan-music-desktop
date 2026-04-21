@@ -11,6 +11,7 @@
     <ul v-if="show" ref="dom_list" class="selection-list scroll" :class="$style.list" :style="listStyles">
       <li
         v-for="(item, index) in list" :key="index" :class="[$style.listItem, (itemKey ? item[itemKey] : item) == modelValue ? $style.active : null]"
+        tabindex="0"
         :aria-label="itemName ? item[itemName] : item" @click="handleClick(item)"
       >
         {{ itemName ? item[itemName] : item }}
@@ -114,7 +115,7 @@ export default {
 <style lang="less" module>
 @import '@renderer/assets/styles/layout.less';
 
-@selection-height: 28px;
+@selection-height: @ui-control-height-md;
 
 .select {
   display: inline-block;
@@ -124,7 +125,7 @@ export default {
 
   &.active {
     .label {
-      background-color: var(--color-button-background);
+      background-color: var(--ui-control-bg);
     }
     .list {
       opacity: 1;
@@ -138,15 +139,15 @@ export default {
 }
 
 .label {
-  background-color: var(--color-button-background);
+  background-color: var(--ui-control-bg);
   padding: 0 10px;
   transition: background-color @transition-normal;
   height: @selection-height;
   // line-height: 27px;
   line-height: 1.5;
   box-sizing: border-box;
-  color: var(--color-button-font);
-  border-radius: @form-radius;
+  color: var(--ui-text-primary);
+  border-radius: @ui-radius-md;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -167,10 +168,10 @@ export default {
   }
 
   &:hover {
-    background-color: var(--color-button-background-hover);
+    background-color: var(--ui-control-bg-hover);
   }
   &:active {
-    background-color: var(--color-button-background-active);
+    background-color: var(--ui-control-bg-active);
   }
 }
 
@@ -179,15 +180,15 @@ export default {
   top: 0;
   left: 0;
   width: 100%;
-  background-color: var(--color-content-background);
+  background-color: var(--ui-popover-bg);
   opacity: 0;
   transform: scaleY(0) translateY(0);
   transform-origin: 0 (@selection-height / 2) 0;
   transition: .25s ease;
   transition-property: transform, opacity;
   z-index: 10;
-  border-radius: @form-radius;
-  box-shadow: 0 0 4px rgba(0, 0, 0, .15);
+  border-radius: @ui-radius-md;
+  box-shadow: @ui-shadow-1;
   overflow: auto;
   max-height: 200px;
 }
@@ -203,13 +204,16 @@ export default {
   .mixin-ellipsis-1();
 
   &:hover {
-    background-color: var(--color-button-background-hover);
+    background-color: var(--ui-popover-hover);
   }
   &:active {
-    background-color: var(--color-button-background-active);
+    background-color: var(--ui-popover-active);
   }
   &.active {
-    color: var(--color-button-font);
+    color: var(--ui-text-primary);
+  }
+  &:focus-visible {
+    box-shadow: inset 0 0 0 2px var(--ui-focus-ring);
   }
 }
 

@@ -94,12 +94,12 @@ export default {
 .input {
   display: inline-block;
   border: none;
-  border-radius: @form-radius;
+  border-radius: @ui-radius-md;
   padding: 7px 8px;
-  color: var(--color-button-font);
+  color: var(--ui-text-primary);
   outline: none;
   transition: background-color 0.2s ease;
-  background-color: var(--color-primary-background);
+  background-color: var(--ui-control-bg);
   font-size: 13.3px;
 
   &::-webkit-outer-spin-button,
@@ -113,10 +113,13 @@ export default {
   }
 
   &:hover, &:focus {
-    background-color: var(--color-primary-background-hover);
+    background-color: var(--ui-control-bg-hover);
   }
   &:active {
-    background-color: var(--color-primary-background-active);
+    background-color: var(--ui-control-bg-active);
+  }
+  &:focus-visible {
+    box-shadow: 0 0 0 3px var(--ui-focus-ring);
   }
 }
 

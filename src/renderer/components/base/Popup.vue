@@ -121,8 +121,8 @@ onBeforeUnmount(() => {
   // left: 8px;
   // margin-top: 12px;
   max-width: 98%;
-  border-radius: 4px;
-  background-color: var(--color-content-background);
+  border-radius: @ui-radius-md;
+  background-color: var(--ui-popover-bg);
   opacity: 0;
   transform: scale(.8);
   transform-origin: 50% 0 0;
@@ -131,7 +131,7 @@ onBeforeUnmount(() => {
   max-height: 250px;
   z-index: 10;
   pointer-events: none;
-  filter: drop-shadow(0px 0px 3px rgba(0, 0, 0, .12));
+  box-shadow: @ui-shadow-1;
   display: flex;
 
   &:before {
@@ -143,7 +143,7 @@ onBeforeUnmount(() => {
     height: 0;
     border-left: 8px solid transparent;
     border-right: 8px solid transparent;
-    border-bottom: 8px solid var(--color-content-background);
+    border-bottom: 8px solid var(--ui-popover-bg);
   }
 
   &.active {
@@ -153,13 +153,12 @@ onBeforeUnmount(() => {
   }
 
   &.top {
-    filter: drop-shadow(0px 1px 3px rgba(0, 0, 0, .12));
     transform-origin: 50% 100% 0;
 
     &:before {
       top: 100%;
       border-bottom: none;
-      border-top: 8px solid var(--color-content-background);
+      border-top: 8px solid var(--ui-popover-bg);
     }
   }
 }
