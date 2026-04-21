@@ -23,24 +23,24 @@
     <play-progress />
     <control-btns />
     <div :class="$style.playBtnContent">
-      <div :class="$style.playBtn" :aria-label="$t('player__prev')" @click="playPrev()">
+      <button :class="$style.playBtn" type="button" :aria-label="$t('player__prev')" @click="playPrev()">
         <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink" height="100%" viewBox="0 0 1024 1024" space="preserve">
           <use xlink:href="#icon-prevMusic" />
         </svg>
-      </div>
-      <div :class="$style.playBtn" :aria-label="isPlay ? $t('player__pause') : $t('player__play')" @click="togglePlay">
+      </button>
+      <button :class="$style.playBtn" type="button" :aria-label="isPlay ? $t('player__pause') : $t('player__play')" @click="togglePlay">
         <svg v-if="isPlay" version="1.1" xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink" height="100%" viewBox="0 0 1024 1024" space="preserve">
           <use xlink:href="#icon-pause" />
         </svg>
         <svg v-else version="1.1" xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink" height="100%" viewBox="0 0 1024 1024" space="preserve">
           <use xlink:href="#icon-play" />
         </svg>
-      </div>
-      <div :class="$style.playBtn" :aria-label="$t('player__next')" @click="playNext()">
+      </button>
+      <button :class="$style.playBtn" type="button" :aria-label="$t('player__next')" @click="playNext()">
         <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink" height="100%" viewBox="0 0 1024 1024" space="preserve">
           <use xlink:href="#icon-nextMusic" />
         </svg>
-      </div>
+      </button>
     </div>
   </div>
 </template>
@@ -317,6 +317,9 @@ export default {
 .playBtn {
   flex: none;
   height: 52%;
+  border: none;
+  background: none;
+  padding: 0;
   // margin-top: -2px;
   transition: @transition-fast;
   transition-property: color, opacity;
@@ -333,6 +336,9 @@ export default {
   }
   &:active {
     opacity: 0.6;
+  }
+  &:focus-visible {
+    box-shadow: 0 0 0 3px var(--ui-focus-ring);
   }
 }
 

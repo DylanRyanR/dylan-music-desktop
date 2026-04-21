@@ -176,14 +176,14 @@ export default {
 
   &.active {
     // border-left-color: @color-theme-active;
-    background-color: var(--color-primary-light-300-alpha-700);
+    background-color: var(--ui-list-row-selected);
 
     &:before {
       transform: translateX(0);
     }
 
     &:hover {
-      background-color: var(--color-primary-light-300-alpha-800);
+      background-color: var(--ui-list-row-selected);
     }
   }
 
@@ -193,7 +193,7 @@ export default {
 
     &:not(.active) {
       opacity: .8;
-      background-color: var(--color-primary-light-400-alpha-700);
+      background-color: var(--ui-list-row-hover);
     }
   }
   &:active:not(.active) {
