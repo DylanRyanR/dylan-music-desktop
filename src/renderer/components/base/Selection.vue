@@ -189,6 +189,9 @@ export default {
   &:active {
     background-color: var(--ui-control-bg-active);
   }
+  &:focus-visible {
+    box-shadow: 0 0 0 3px var(--ui-focus-ring);
+  }
 }
 
 .list {
@@ -229,7 +232,7 @@ export default {
     color: var(--ui-text-primary);
   }
   &:focus-visible {
-    box-shadow: inset 0 0 0 2px var(--ui-focus-ring);
+    box-shadow: 0 0 0 3px var(--ui-focus-ring);
   }
 }
 

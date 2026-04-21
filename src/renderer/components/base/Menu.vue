@@ -121,7 +121,7 @@ export default {
     background-color: var(--ui-popover-active);
   }
   &:focus-visible {
-    box-shadow: inset 0 0 0 2px var(--ui-focus-ring);
+    box-shadow: 0 0 0 3px var(--ui-focus-ring);
   }
 
   &[disabled] {

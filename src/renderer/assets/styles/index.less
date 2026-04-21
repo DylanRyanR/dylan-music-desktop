@@ -6,6 +6,14 @@
 	-webkit-user-drag: none;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+  }
+}
+
 :root {
   --ui-text-primary: var(--color-font);
   --ui-text-secondary: var(--color-font-label);

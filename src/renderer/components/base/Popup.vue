@@ -151,6 +151,9 @@ onBeforeUnmount(() => {
     transform: scale(1);
     pointer-events: initial;
   }
+  &:focus-visible {
+    box-shadow: 0 0 0 3px var(--ui-focus-ring);
+  }
 
   &.top {
     transform-origin: 50% 100% 0;
