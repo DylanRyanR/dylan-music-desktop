@@ -10,6 +10,7 @@ import { createClient } from 'webdav'
 import SMB2 from '@marsaud/smb2'
 import { parseFile } from 'music-metadata'
 import { formatPlayTime, encodePath } from '@common/utils/common'
+import { httpFetch } from '@main/utils/request'
 
 const AUDIO_EXTS = new Set(['mp3', 'flac', 'm4a', 'aac', 'wav', 'ogg', 'opus'])
 const CACHE_DIR = path.join(os.tmpdir(), 'lxmusic_media_cache')
@@ -17,7 +18,7 @@ const execFile = promisify(cp.execFile)
 
 export interface MediaConnectionConfig {
   id: string
-  type: 'smb' | 'webdav' | 'local'
+  type: 'smb' | 'webdav' | 'local' | 'onedrive'
   name: string
   host?: string
   port?: number
@@ -28,6 +29,12 @@ export interface MediaConnectionConfig {
   username?: string
   password?: string
   domain?: string
+  clientId?: string
+  tenant?: string
+  shareLink?: string
+  refreshToken?: string
+  accountName?: string
+  accountId?: string
   status?: string | null
   lastScanAt?: number | null
   lastScanStatus?: string | null
@@ -66,6 +73,58 @@ export interface MediaScanProgress {
 }
 
 export type MediaScanProgressHandler = (progress: MediaScanProgress) => void
+
+interface OnedriveTokenResponse {
+  access_token?: string
+  refresh_token?: string
+  expires_in?: number
+  error?: string
+  error_description?: string
+}
+
+interface OnedriveGraphErrorResponse {
+  error?: {
+    code?: string
+    message?: string
+  }
+}
+
+interface OnedriveAudioFacet {
+  album?: string
+  artist?: string
+  duration?: number
+}
+
+interface OnedriveParentReference {
+  driveId?: string
+  id?: string
+  path?: string
+}
+
+interface OnedriveDriveItem {
+  id: string
+  name: string
+  size?: number
+  file?: {
+    mimeType?: string
+  }
+  folder?: {
+    childCount?: number
+  }
+  audio?: OnedriveAudioFacet
+  lastModifiedDateTime?: string
+  webUrl?: string
+  parentReference?: OnedriveParentReference
+}
+
+interface OnedriveDriveChildrenResponse {
+  value?: OnedriveDriveItem[]
+  '@odata.nextLink'?: string
+}
+
+const ONEDRIVE_GRAPH_ROOT = 'https://graph.microsoft.com/v1.0'
+const ONEDRIVE_SCOPE = 'offline_access User.Read Files.Read Files.Read.All Sites.Read.All'
+const ONEDRIVE_DEFAULT_TENANT = 'common'
 
 const normalizeRemotePath = (inputPath: string) => {
   if (!inputPath) return '/'
@@ -228,26 +287,28 @@ const fromDbConnection = (connection: LX.DBService.MediaConnection): MediaConnec
 }
 
 const toMediaMusicInfo = (item: LX.DBService.MediaItem, connectionNameMap: Map<string, string>): LX.Music.MusicInfo => {
-  const meta = JSON.parse(item.meta) as Record<string, any>
+  const meta = JSON.parse(item.meta) as Record<string, unknown>
+  const connectionType = (typeof meta.type === 'string' ? meta.type : 'smb') as LX.Music.MusicInfoMeta_media['connectionType']
+  const picUrl = typeof meta.picUrl === 'string' ? meta.picUrl : null
+  const musicMeta: LX.Music.MusicInfoMeta_media = {
+    songId: item.id,
+    albumName: item.album,
+    filePath: item.path,
+    ext: item.ext,
+    connectionId: item.connectionId,
+    connectionName: connectionNameMap.get(item.connectionId) ?? '',
+    connectionType,
+    versionToken: item.versionToken,
+    picUrl,
+  }
   return {
     id: item.id,
     name: item.title,
     singer: item.artist,
-    source: 'media' as LX.Source,
+    source: 'media',
     interval: item.interval,
-    meta: {
-      songId: item.id,
-      albumName: item.album,
-      filePath: item.path,
-      ext: item.ext,
-      connectionId: item.connectionId,
-      connectionName: connectionNameMap.get(item.connectionId) ?? '',
-      connectionType: meta.type ?? 'smb',
-      type: meta.type,
-      versionToken: item.versionToken,
-      picUrl: meta.picUrl ?? null,
-    } as any,
-  } as LX.Music.MusicInfo
+    meta: musicMeta,
+  }
 }
 
 const readMetadata = async(filePath: string): Promise<MediaParsedMetadata> => {
@@ -255,7 +316,7 @@ const readMetadata = async(filePath: string): Promise<MediaParsedMetadata> => {
     const metadata = await parseFile(filePath)
     const picture = metadata.common.picture?.[0]
     return {
-      title: (metadata.common.title || path.basename(filePath, path.extname(filePath))).trim(),
+      title: (metadata.common.title ?? path.basename(filePath, path.extname(filePath))).trim(),
       artist: metadata.common.artists?.length ? metadata.common.artists.join('、') : '',
       album: metadata.common.album?.trim() ?? '',
       interval: metadata.format.duration ? formatPlayTime(metadata.format.duration) : null,
@@ -298,7 +359,166 @@ const createSmbClient = (connection: MediaConnectionConfig) => {
   })
 }
 
-const mapItem = (connection: MediaConnectionConfig, itemPath: string, fileName: string, fileSize: number, mtime: number, metadata: MediaParsedMetadata): MediaScannedItem => {
+const isHttpFailureStatus = (statusCode?: number) => (statusCode ?? 500) >= 400
+
+const getOnedriveTenant = (connection: MediaConnectionConfig) => (connection.tenant ?? ONEDRIVE_DEFAULT_TENANT).trim() || ONEDRIVE_DEFAULT_TENANT
+
+const getOnedriveTokenEndpoint = (tenant: string) => `https://login.microsoftonline.com/${encodeURIComponent(tenant)}/oauth2/v2.0/token`
+
+const ensureOnedriveAuthConfig = (connection: MediaConnectionConfig) => {
+  const clientId = connection.clientId?.trim()
+  const refreshToken = connection.refreshToken?.trim()
+  if (!clientId) throw new Error('OneDrive client ID is required')
+  if (!refreshToken) throw new Error('OneDrive authorization is required, please authorize again')
+  return {
+    clientId,
+    refreshToken,
+    tenant: getOnedriveTenant(connection),
+  }
+}
+
+const getOnedriveErrorMessage = (body: OnedriveTokenResponse | OnedriveGraphErrorResponse | null | undefined, fallback: string) => {
+  if (!body) return fallback
+  if ('error_description' in body && typeof body.error_description === 'string' && body.error_description) {
+    return body.error_description
+  }
+  if ('error' in body) {
+    const error = body.error
+    if (typeof error === 'string' && error) return error
+    if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string' && error.message) {
+      return error.message
+    }
+  }
+  return fallback
+}
+
+const refreshOnedriveAccessToken = async(connection: MediaConnectionConfig) => {
+  const auth = ensureOnedriveAuthConfig(connection)
+  const response = await httpFetch<OnedriveTokenResponse>(getOnedriveTokenEndpoint(auth.tenant), {
+    method: 'POST',
+    form: {
+      client_id: auth.clientId,
+      scope: ONEDRIVE_SCOPE,
+      grant_type: 'refresh_token',
+      refresh_token: auth.refreshToken,
+    },
+    headers: {
+      Accept: 'application/json',
+    },
+    timeout: 25000,
+  })
+  if (isHttpFailureStatus(response.statusCode) || !response.body?.access_token) {
+    const body = response.body
+    if (body?.error === 'invalid_grant') {
+      throw new Error('OneDrive token expired, please authorize again')
+    }
+    throw new Error(getOnedriveErrorMessage(body, 'Failed to refresh OneDrive token'))
+  }
+  if (response.body.refresh_token?.trim()) {
+    connection.refreshToken = response.body.refresh_token.trim()
+  }
+  return response.body.access_token
+}
+
+const onedriveGraphGetJson = async<T>(accessToken: string, url: string) => {
+  const response = await httpFetch<T | OnedriveGraphErrorResponse>(url, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      Accept: 'application/json',
+    },
+    timeout: 30000,
+  })
+  if (isHttpFailureStatus(response.statusCode)) {
+    const body = response.body as OnedriveGraphErrorResponse
+    if (response.statusCode === 401 || body?.error?.code === 'InvalidAuthenticationToken') {
+      throw new Error('OneDrive authorization expired, please authorize again')
+    }
+    throw new Error(getOnedriveErrorMessage(body, `OneDrive API request failed (${response.statusCode})`))
+  }
+  return response.body as T
+}
+
+const onedriveGraphGetBytes = async(accessToken: string, url: string) => {
+  const response = await httpFetch<unknown>(url, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    needRaw: true,
+    timeout: 120000,
+  })
+  if (isHttpFailureStatus(response.statusCode)) {
+    throw new Error(`OneDrive file download failed (${response.statusCode})`)
+  }
+  return Buffer.from(response.raw ?? new Uint8Array())
+}
+
+const toOnedriveShareId = (shareLink: string) => {
+  const encoded = Buffer.from(shareLink).toString('base64')
+    .replace(/=/g, '')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+  return `u!${encoded}`
+}
+
+const getOnedriveRoot = async(connection: MediaConnectionConfig, accessToken: string) => {
+  const shareLink = connection.shareLink?.trim()
+  if (shareLink) {
+    const shareId = toOnedriveShareId(shareLink)
+    const item = await onedriveGraphGetJson<OnedriveDriveItem>(accessToken, `${ONEDRIVE_GRAPH_ROOT}/shares/${shareId}/driveItem?$select=id,name,size,file,folder,audio,lastModifiedDateTime,parentReference,webUrl`)
+    const driveId = item.parentReference?.driveId
+    if (!driveId) throw new Error('Cannot resolve drive info from share link')
+    return {
+      driveId,
+      item,
+    }
+  }
+  const item = await onedriveGraphGetJson<OnedriveDriveItem>(accessToken, `${ONEDRIVE_GRAPH_ROOT}/me/drive/root?$select=id,name,size,file,folder,audio,lastModifiedDateTime,parentReference,webUrl`)
+  let driveId = item.parentReference?.driveId
+  if (!driveId) {
+    const drive = await onedriveGraphGetJson<{ id?: string }>(accessToken, `${ONEDRIVE_GRAPH_ROOT}/me/drive?$select=id`)
+    driveId = drive.id
+  }
+  if (!driveId) throw new Error('Cannot resolve OneDrive drive ID')
+  return {
+    driveId,
+    item,
+  }
+}
+
+const listOnedriveChildren = async(accessToken: string, driveId: string, itemId: string) => {
+  let nextLink: string | undefined = `${ONEDRIVE_GRAPH_ROOT}/drives/${encodeURIComponent(driveId)}/items/${encodeURIComponent(itemId)}/children?$top=200&$select=id,name,size,file,folder,audio,lastModifiedDateTime,parentReference,webUrl`
+  const result: OnedriveDriveItem[] = []
+  while (nextLink) {
+    const page: OnedriveDriveChildrenResponse = await onedriveGraphGetJson<OnedriveDriveChildrenResponse>(accessToken, nextLink)
+    if (Array.isArray(page.value)) result.push(...page.value)
+    nextLink = page['@odata.nextLink']
+  }
+  return result
+}
+
+const onedriveMetadataFromItem = (item: OnedriveDriveItem): MediaParsedMetadata => {
+  const title = path.basename(item.name, path.extname(item.name)).trim() || item.name
+  const duration = Number(item.audio?.duration ?? 0)
+  return {
+    title,
+    artist: item.audio?.artist?.trim() ?? '',
+    album: item.audio?.album?.trim() ?? '',
+    interval: duration > 0 ? formatPlayTime(duration / 1000) : null,
+    picUrl: null,
+  }
+}
+
+const mapItem = (
+  connection: MediaConnectionConfig,
+  itemPath: string,
+  fileName: string,
+  fileSize: number,
+  mtime: number,
+  metadata: MediaParsedMetadata,
+  extraMeta: Record<string, unknown> = {},
+): MediaScannedItem => {
   const ext = getExt(fileName)
   const versionToken = getVersionToken(itemPath, fileSize, mtime)
   return {
@@ -320,6 +540,7 @@ const mapItem = (connection: MediaConnectionConfig, itemPath: string, fileName: 
       rootPath: connection.rootPath ?? '/',
       localPath: connection.localPath ?? '',
       picUrl: metadata.picUrl,
+      ...extraMeta,
     }),
   }
 }
@@ -468,17 +689,113 @@ const scanSmb = async(connection: MediaConnectionConfig, onProgress?: MediaScanP
   }
 }
 
+const scanOnedrive = async(connection: MediaConnectionConfig, onProgress?: MediaScanProgressHandler): Promise<MediaScannedItem[]> => {
+  const accessToken = await refreshOnedriveAccessToken(connection)
+  const root = await getOnedriveRoot(connection, accessToken)
+  const pendingFolders: Array<{ driveId: string, itemId: string, parentPath: string }> = []
+  const audioItems: Array<{ driveId: string, item: OnedriveDriveItem, filePath: string }> = []
+
+  const pushAudioItem = (driveId: string, item: OnedriveDriveItem, filePath: string) => {
+    if (!item.file || !isAudioFile(item.name)) return
+    audioItems.push({
+      driveId,
+      item,
+      filePath: normalizeRemotePath(filePath),
+    })
+  }
+
+  if (root.item.folder) {
+    pendingFolders.push({
+      driveId: root.driveId,
+      itemId: root.item.id,
+      parentPath: '',
+    })
+  } else {
+    pushAudioItem(root.driveId, root.item, root.item.name)
+  }
+
+  while (pendingFolders.length) {
+    const current = pendingFolders.shift()!
+    const children = await listOnedriveChildren(accessToken, current.driveId, current.itemId)
+    for (const child of children) {
+      const childPath = path.posix.join(current.parentPath, child.name)
+      if (child.folder) {
+        pendingFolders.push({
+          driveId: current.driveId,
+          itemId: child.id,
+          parentPath: childPath,
+        })
+        continue
+      }
+      pushAudioItem(current.driveId, child, childPath)
+    }
+  }
+
+  onProgress?.({
+    stage: 'discovering',
+    current: 0,
+    total: audioItems.length,
+  })
+
+  const result: MediaScannedItem[] = []
+  let current = 0
+  for (const itemInfo of audioItems) {
+    current += 1
+    onProgress?.({
+      stage: 'scanning',
+      current,
+      total: audioItems.length,
+    })
+    const metadata = onedriveMetadataFromItem(itemInfo.item)
+    const mtime = itemInfo.item.lastModifiedDateTime ? new Date(itemInfo.item.lastModifiedDateTime).getTime() : Date.now()
+    result.push(mapItem(
+      connection,
+      itemInfo.filePath,
+      itemInfo.item.name,
+      Number(itemInfo.item.size ?? 0),
+      mtime,
+      metadata,
+      {
+        onedriveDriveId: itemInfo.driveId,
+        onedriveItemId: itemInfo.item.id,
+        onedriveWebUrl: itemInfo.item.webUrl ?? '',
+        onedriveShareLink: connection.shareLink?.trim() ?? '',
+      },
+    ))
+  }
+
+  return result
+}
+
 export const scanConnection = async(connection: MediaConnectionConfig, onProgress?: MediaScanProgressHandler): Promise<MediaScannedItem[]> => {
   if (connection.type === 'webdav') return scanWebdav(connection, onProgress)
   if (connection.type === 'smb') return scanSmb(connection, onProgress)
   if (connection.type === 'local') return scanLocal(connection, onProgress)
-  throw new Error(`Unsupported media connection type: ${connection.type}`)
+  if (connection.type === 'onedrive') return scanOnedrive(connection, onProgress)
+  throw new Error('Unsupported media connection type')
 }
 
 const getLocalFilePath = (connection: MediaConnectionConfig, itemPath: string) => {
   const root = getLocalRootPath(connection)
   const relative = normalizeRemotePath(itemPath).replace(/^\//, '')
   return path.join(root, relative)
+}
+
+const readOnedriveMeta = (item: LX.DBService.MediaItem) => {
+  try {
+    const meta = JSON.parse(item.meta) as Record<string, unknown>
+    const driveId = typeof meta.onedriveDriveId === 'string' ? meta.onedriveDriveId : ''
+    const itemId = typeof meta.onedriveItemId === 'string' ? meta.onedriveItemId : ''
+    return {
+      driveId,
+      itemId,
+    }
+  } catch {
+    return {
+      driveId: '',
+      itemId: '',
+    }
+  }
 }
 
 export const getPlayUrl = async(connection: MediaConnectionConfig, item: LX.DBService.MediaItem) => {
@@ -518,6 +835,20 @@ export const getPlayUrl = async(connection: MediaConnectionConfig, item: LX.DBSe
     const filePath = getLocalFilePath(connection, item.path)
     await fs.access(filePath, fsSync.constants.R_OK)
     return `file:///${encodePath(filePath)}`
+  }
+
+  if (connection.type === 'onedrive') {
+    const meta = readOnedriveMeta(item)
+    if (!meta.driveId || !meta.itemId) {
+      throw new Error('OneDrive media item metadata is missing, please rescan this connection')
+    }
+    const accessToken = await refreshOnedriveAccessToken(connection)
+    const data = await onedriveGraphGetBytes(
+      accessToken,
+      `${ONEDRIVE_GRAPH_ROOT}/drives/${encodeURIComponent(meta.driveId)}/items/${encodeURIComponent(meta.itemId)}/content`,
+    )
+    await fs.writeFile(cachePath, data)
+    return cachePath
   }
 
   throw new Error('Unsupported media source')

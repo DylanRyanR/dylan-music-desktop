@@ -7,7 +7,7 @@ dd
       div
         p(:class="$style.eyebrow") Media Library
         p(:class="$style.sectionTitle") 管理媒体来源
-        p(:class="$style.sectionDesc") 添加本地文件夹、SMB 或 WebDAV 来源，扫描后可按连接浏览媒体库。
+        p(:class="$style.sectionDesc") 添加本地文件夹、SMB、WebDAV 或 OneDrive 来源，扫描后可按连接浏览媒体库。
 
     .gap-top(:class="$style.sourcePicker")
       button(
@@ -66,7 +66,7 @@ dd.gap-top
         base-input#media_library_root_path_webdav(:model-value="form.rootPath" placeholder="/music" :disabled="isSaving" @update:model-value="updateField('rootPath', $event)")
         p(:class="$style.helper") 可选。填写 WebDAV 下的子目录；使用 / 表示扫描整个连接。
 
-    template(v-else)
+    template(v-else-if="form.type === 'smb'")
       .gap-top(:class="$style.fieldRow")
         div(:class="$style.field")
           label(:class="$style.label" for="media_library_host") 主机
@@ -90,7 +90,31 @@ dd.gap-top
         base-input#media_library_domain(:model-value="form.domain" placeholder="WORKGROUP" :disabled="isSaving" @update:model-value="updateField('domain', $event)")
         p(:class="$style.helper") 如果服务器不要求域或工作组，可留空。
 
-    template(v-if="form.type !== 'local'")
+    template(v-else-if="form.type === 'onedrive'")
+      .gap-top(:class="$style.field")
+        label(:class="$style.label" for="media_library_onedrive_client_id") Client ID
+        base-input#media_library_onedrive_client_id(:model-value="form.clientId" placeholder="00000000-0000-0000-0000-000000000000" :disabled="isSaving || onedriveAuthLoading" @update:model-value="updateField('clientId', $event)")
+        p(:class="$style.helper") 使用 Azure App 注册得到的应用程序 (客户端) ID。
+        p(v-if="errors.clientId" :class="$style.error") {{ errors.clientId }}
+      .gap-top(:class="$style.field")
+        label(:class="$style.label" for="media_library_onedrive_tenant") Tenant
+        base-input#media_library_onedrive_tenant(:model-value="form.tenant" placeholder="common" :disabled="isSaving || onedriveAuthLoading" @update:model-value="updateField('tenant', $event)")
+        p(:class="$style.helper") 留空默认 common，可同时支持个人和企业账号。
+      .gap-top(:class="$style.field")
+        label(:class="$style.label" for="media_library_onedrive_share_link") SharePoint 分享链接（可选）
+        base-input#media_library_onedrive_share_link(:model-value="form.shareLink" placeholder="https://.../shared/... " :disabled="isSaving || onedriveAuthLoading" @update:model-value="updateField('shareLink', $event)")
+        p(:class="$style.helper") 填写后优先扫描此分享链接，不填则扫描 OneDrive 根目录。
+      .gap-top(:class="$style.authPanel")
+        base-btn.btn(min :disabled="isSaving || onedriveAuthLoading" @click="authorizeOnedrive") {{ onedriveAuthLoading ? '授权中...' : '设备码授权' }}
+        p(v-if="onedriveDeviceCodeInfo?.userCode" :class="$style.authCode")
+          | Code: {{ onedriveDeviceCodeInfo.userCode }}
+          br
+          | URL: {{ onedriveDeviceCodeInfo.verificationUri }}
+        p(v-if="onedriveAuthSummary" :class="$style.helper") {{ onedriveAuthSummary }}
+        p(v-if="errors.refreshToken" :class="$style.error") {{ errors.refreshToken }}
+        p(v-if="onedriveAuthError" :class="$style.error") {{ onedriveAuthError }}
+
+    template(v-if="form.type === 'smb' || form.type === 'webdav'")
       .gap-top(:class="$style.fieldRow")
         div(:class="$style.field")
           label(:class="$style.label" for="media_library_username") 用户名
@@ -126,13 +150,22 @@ dd.gap-top
     .gap-top(:class="$style.emptyState")
       p(:class="$style.eyebrow") 空状态
       h4(:class="$style.emptyTitle") 还没有媒体来源
-      p(:class="$style.emptyDesc") 先创建本地文件夹、SMB 或 WebDAV 连接，再扫描导入你的媒体库。
+      p(:class="$style.emptyDesc") 先创建本地文件夹、SMB、WebDAV 或 OneDrive 连接，再扫描导入你的媒体库。
 </template>
 
 <script>
 import { computed, ref, onMounted, onBeforeUnmount } from '@common/utils/vueTools'
 import { dialog } from '@renderer/plugins/Dialog'
-import { getMediaConnections, saveMediaConnection, removeMediaConnection, scanMediaConnection, showSelectDialog, onMediaConnectionScanProgress } from '@renderer/utils/ipc'
+import {
+  getMediaConnections,
+  saveMediaConnection,
+  removeMediaConnection,
+  scanMediaConnection,
+  showSelectDialog,
+  onMediaConnectionScanProgress,
+  startOnedriveDeviceCode,
+  pollOnedriveDeviceCode,
+} from '@renderer/utils/ipc'
 
 const createForm = (type = 'local') => ({
   id: '',
@@ -147,6 +180,13 @@ const createForm = (type = 'local') => ({
   domain: '',
   username: '',
   password: '',
+  clientId: '',
+  tenant: 'common',
+  shareLink: '',
+  refreshToken: '',
+  accountName: '',
+  accountId: '',
+  authExpiresAt: 0,
   isEnabled: true,
 })
 
@@ -162,7 +202,11 @@ export default {
     const isScanningId = ref('')
     const scanProgressMap = ref({})
     const scanTimingMap = ref({})
+    const onedriveAuthLoading = ref(false)
+    const onedriveAuthError = ref('')
+    const onedriveDeviceCodeInfo = ref(null)
     const ETA_SMOOTHING_FACTOR = 0.25
+    const normalizeTenant = (tenant) => (tenant || 'common').trim() || 'common'
 
     const sourceOptions = [
       {
@@ -192,17 +236,28 @@ export default {
         actionHint: '已切换到 WebDAV 表单，请填写服务地址与根路径。',
         recommended: false,
       },
+      {
+        type: 'onedrive',
+        label: 'OneDrive',
+        icon: 'O',
+        desc: 'OneDrive / OneDrive for Business / SharePoint',
+        scene: 'Microsoft cloud drive and SharePoint share link',
+        actionHint: 'Fill Client ID, then run device code authorization before save.',
+        recommended: false,
+      },
     ]
 
     const isEditing = computed(() => !!editingId.value)
     const currentTypeLabel = computed(() => {
       if (form.value.type === 'local') return '本地文件夹'
       if (form.value.type === 'webdav') return 'WebDAV 连接'
+      if (form.value.type === 'onedrive') return 'OneDrive 连接'
       return 'SMB 连接'
     })
     const currentTypeDesc = computed(() => {
       if (form.value.type === 'local') return '适合扫描当前电脑或本机挂载盘中的音乐目录，最适合大多数本地音乐场景。'
       if (form.value.type === 'webdav') return '适合 NAS、网盘或其他支持 WebDAV 的远程目录，需要填写服务地址。'
+      if (form.value.type === 'onedrive') return '适合 OneDrive 个人盘、企业盘，以及 SharePoint 分享链接。'
       return '适合局域网共享文件夹，需要填写主机、共享名以及可选认证信息。'
     })
     const formTitle = computed(() => {
@@ -231,6 +286,12 @@ export default {
       if (/\/$/.test(value) && !/^[A-Za-z]:\/$/.test(value)) return '末尾斜杠可以保留，但通常去掉会更整洁。'
       return '路径格式看起来没问题，保存后会递归扫描该文件夹及其子目录。'
     })
+    const onedriveAuthSummary = computed(() => {
+      if (form.value.type !== 'onedrive') return ''
+      if (!form.value.refreshToken) return ''
+      const account = form.value.accountName || form.value.accountId || '已完成授权'
+      return `已授权：${account}`
+    })
 
     const load = async() => {
       connections.value = (await getMediaConnections()).map(item => ({
@@ -245,6 +306,11 @@ export default {
 
     const resetErrors = () => {
       errors.value = {}
+    }
+
+    const clearOnedriveAuthState = () => {
+      onedriveAuthError.value = ''
+      onedriveDeviceCodeInfo.value = null
     }
 
     const updateField = (key, value) => {
@@ -297,12 +363,15 @@ export default {
         if (!form.value.localPath) nextErrors.localPath = '请输入文件夹路径'
       } else if (form.value.type === 'webdav') {
         if (!form.value.url) nextErrors.url = '请输入 WebDAV 地址'
-      } else {
+      } else if (form.value.type === 'smb') {
         if (!form.value.host) nextErrors.host = '请输入主机地址'
         if (!form.value.share) nextErrors.share = '请输入共享名'
         if (form.value.port != null && form.value.port !== '' && !/^\d+$/.test(String(form.value.port))) {
           nextErrors.port = '端口必须是数字'
         }
+      } else if (form.value.type === 'onedrive') {
+        if (!form.value.clientId) nextErrors.clientId = '请输入 OneDrive Client ID'
+        if (!form.value.refreshToken) nextErrors.refreshToken = '请先完成设备码授权'
       }
       errors.value = nextErrors
       return !Object.keys(nextErrors).length
@@ -312,18 +381,58 @@ export default {
       editingId.value = ''
       form.value = createForm(type)
       resetErrors()
+      clearOnedriveAuthState()
     }
 
     const editConnection = (item) => {
       editingId.value = item.id
       form.value = { ...createForm(item.type), ...item }
+      form.value.tenant = normalizeTenant(form.value.tenant)
       resetErrors()
+      clearOnedriveAuthState()
     }
 
     const cancel = () => {
       editingId.value = ''
       form.value = createForm(form.value.type || 'local')
       resetErrors()
+      clearOnedriveAuthState()
+    }
+
+    const authorizeOnedrive = async() => {
+      if (form.value.type !== 'onedrive') return
+      const clientId = (form.value.clientId || '').trim()
+      if (!clientId) {
+        errors.value = {
+          ...errors.value,
+          clientId: '请输入 OneDrive Client ID',
+        }
+        return
+      }
+      onedriveAuthLoading.value = true
+      onedriveAuthError.value = ''
+      try {
+        const tenant = normalizeTenant(form.value.tenant)
+        const deviceInfo = await startOnedriveDeviceCode({ clientId, tenant })
+        onedriveDeviceCodeInfo.value = deviceInfo
+        const tokenInfo = await pollOnedriveDeviceCode({
+          clientId,
+          tenant,
+          deviceCode: deviceInfo.deviceCode,
+          interval: deviceInfo.interval,
+          expiresIn: deviceInfo.expiresIn,
+        })
+        updateField('tenant', tenant)
+        updateField('refreshToken', tokenInfo.refreshToken)
+        updateField('accountName', tokenInfo.accountName || '')
+        updateField('accountId', tokenInfo.accountId || '')
+        form.value.authExpiresAt = Date.now() + (tokenInfo.expiresIn || 3600) * 1000
+        if (!form.value.name && tokenInfo.accountName) updateField('name', tokenInfo.accountName)
+      } catch (error) {
+        onedriveAuthError.value = error?.message || 'OneDrive 授权失败'
+      } finally {
+        onedriveAuthLoading.value = false
+      }
     }
 
     const save = async() => {
@@ -333,15 +442,22 @@ export default {
       try {
         const payload = {
           ...form.value,
-          port: form.value.port ? Number(form.value.port) : undefined,
-          rootPath: form.value.type === 'local' ? undefined : form.value.rootPath,
+          port: form.value.type === 'smb' && form.value.port ? Number(form.value.port) : undefined,
+          rootPath: form.value.type === 'smb' || form.value.type === 'webdav' ? form.value.rootPath : undefined,
           host: form.value.type === 'smb' ? form.value.host : undefined,
           share: form.value.type === 'smb' ? form.value.share : undefined,
           url: form.value.type === 'webdav' ? form.value.url : undefined,
           localPath: form.value.type === 'local' ? form.value.localPath : undefined,
-          username: form.value.type === 'local' ? undefined : form.value.username,
-          password: form.value.type === 'local' ? undefined : form.value.password,
+          username: form.value.type === 'smb' || form.value.type === 'webdav' ? form.value.username : undefined,
+          password: form.value.type === 'smb' || form.value.type === 'webdav' ? form.value.password : undefined,
           domain: form.value.type === 'smb' ? form.value.domain : undefined,
+          clientId: form.value.type === 'onedrive' ? form.value.clientId : undefined,
+          tenant: form.value.type === 'onedrive' ? normalizeTenant(form.value.tenant) : undefined,
+          shareLink: form.value.type === 'onedrive' ? form.value.shareLink : undefined,
+          refreshToken: form.value.type === 'onedrive' ? form.value.refreshToken : undefined,
+          accountName: form.value.type === 'onedrive' ? form.value.accountName : undefined,
+          accountId: form.value.type === 'onedrive' ? form.value.accountId : undefined,
+          authExpiresAt: form.value.type === 'onedrive' ? form.value.authExpiresAt : undefined,
           id: form.value.id || `${form.value.type}_${Date.now()}`,
         }
         await saveMediaConnection(payload)
@@ -488,6 +604,7 @@ export default {
     const getConnectionPath = (item) => {
       if (item.type === 'local') return item.localPath || '--'
       if (item.type === 'webdav') return `${item.url || '--'}${item.rootPath || '/'}`
+      if (item.type === 'onedrive') return item.shareLink || `OneDrive / ${item.accountName || '--'}`
       return `${item.host || '--'} / ${item.share || '--'}${item.rootPath || '/'}`
     }
 
@@ -550,9 +667,14 @@ export default {
       formDesc,
       actionLabel,
       localPathHint,
+      onedriveAuthLoading,
+      onedriveAuthError,
+      onedriveDeviceCodeInfo,
+      onedriveAuthSummary,
       showCreate,
       editConnection,
       cancel,
+      authorizeOnedrive,
       save,
       remove,
       scan,
@@ -831,6 +953,25 @@ export default {
 
 .helper {
   margin-top: 6px;
+}
+
+.authPanel {
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--color-list-header-border-bottom) 52%, transparent);
+  background: color-mix(in srgb, var(--color-primary-background) 72%, transparent);
+}
+
+.authCode {
+  margin-top: 8px;
+  margin-bottom: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  line-height: 1.7;
+  font-size: 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  word-break: break-all;
+  background: color-mix(in srgb, var(--color-primary-background-hover) 84%, rgba(255, 255, 255, .16));
 }
 
 .error {

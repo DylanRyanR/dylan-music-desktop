@@ -9,7 +9,7 @@ type RemoveListener = () => void
 
 export interface MediaConnectionInfo {
   id: string
-  type: 'smb' | 'webdav' | 'local'
+  type: 'smb' | 'webdav' | 'local' | 'onedrive'
   name: string
   config: string
   status: string | null
@@ -25,6 +25,24 @@ export interface MediaConnectionScanProgressInfo {
   current: number
   total: number
   message: string
+}
+
+export interface OnedriveDeviceCodeInfo {
+  deviceCode: string
+  userCode: string
+  verificationUri: string
+  verificationUriComplete?: string
+  expiresIn: number
+  interval: number
+  message?: string
+}
+
+export interface OnedriveDeviceTokenInfo {
+  accessToken: string
+  refreshToken: string
+  expiresIn: number
+  accountName: string
+  accountId: string
 }
 
 export const getSetting = async() => {
@@ -670,6 +688,12 @@ export const onMediaConnectionScanProgress = (listener: LX.IpcRendererEventListe
   return () => {
     rendererOff(WIN_MAIN_RENDERER_EVENT_NAME.media_connection_scan_progress, listener)
   }
+}
+export const startOnedriveDeviceCode = async(params: { clientId: string, tenant?: string }) => {
+  return rendererInvoke<typeof params, OnedriveDeviceCodeInfo>(WIN_MAIN_RENDERER_EVENT_NAME.media_onedrive_device_code_start, params)
+}
+export const pollOnedriveDeviceCode = async(params: { clientId: string, tenant?: string, deviceCode: string, interval?: number, expiresIn?: number }) => {
+  return rendererInvoke<typeof params, OnedriveDeviceTokenInfo>(WIN_MAIN_RENDERER_EVENT_NAME.media_onedrive_device_code_poll, params)
 }
 export const getMediaLibraryList = async() => {
   return rendererInvoke<LX.Music.MusicInfo[]>(WIN_MAIN_RENDERER_EVENT_NAME.media_library_list)

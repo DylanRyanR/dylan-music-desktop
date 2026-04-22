@@ -85,7 +85,7 @@ declare namespace LX {
 
     interface MediaConnection {
       id: string
-      type: 'smb' | 'webdav' | 'local'
+      type: 'smb' | 'webdav' | 'local' | 'onedrive'
       name: string
       config: string
       status: string | null

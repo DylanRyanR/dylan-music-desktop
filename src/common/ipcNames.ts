@@ -138,6 +138,8 @@ const modules = {
     media_connection_remove: 'media_connection_remove',
     media_connection_scan: 'media_connection_scan',
     media_connection_scan_progress: 'media_connection_scan_progress',
+    media_onedrive_device_code_start: 'media_onedrive_device_code_start',
+    media_onedrive_device_code_poll: 'media_onedrive_device_code_poll',
     media_library_list: 'media_library_list',
     media_library_list_by_connection: 'media_library_list_by_connection',
     media_library_get_play_url: 'media_library_get_play_url',
