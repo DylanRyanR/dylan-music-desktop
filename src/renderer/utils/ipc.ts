@@ -19,6 +19,14 @@ export interface MediaConnectionInfo {
   isEnabled: 0 | 1
 }
 
+export interface MediaConnectionScanProgressInfo {
+  connectionId: string
+  stage: 'preparing' | 'discovering' | 'scanning' | 'saving' | 'done' | 'error'
+  current: number
+  total: number
+  message: string
+}
+
 export const getSetting = async() => {
   return rendererInvoke<LX.AppSetting>(CMMON_EVENT_NAME.get_app_setting)
 }
@@ -656,6 +664,12 @@ export const removeMediaConnection = async(id: string) => {
 }
 export const scanMediaConnection = async(id: string) => {
   return rendererInvoke<string, MediaConnectionInfo | null>(WIN_MAIN_RENDERER_EVENT_NAME.media_connection_scan, id)
+}
+export const onMediaConnectionScanProgress = (listener: LX.IpcRendererEventListenerParams<MediaConnectionScanProgressInfo>): RemoveListener => {
+  rendererOn(WIN_MAIN_RENDERER_EVENT_NAME.media_connection_scan_progress, listener)
+  return () => {
+    rendererOff(WIN_MAIN_RENDERER_EVENT_NAME.media_connection_scan_progress, listener)
+  }
 }
 export const getMediaLibraryList = async() => {
   return rendererInvoke<LX.Music.MusicInfo[]>(WIN_MAIN_RENDERER_EVENT_NAME.media_library_list)

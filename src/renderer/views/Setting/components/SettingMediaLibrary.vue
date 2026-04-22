@@ -117,7 +117,7 @@ dd.gap-top
           p(:class="$style.connectionMeta") {{ item.type.toUpperCase() }}
         span(:class="[$style.statusBadge, $style[`status_${getStatusVariant(item)}`]]") {{ getStatusLabel(item) }}
       p(:class="$style.connectionPath") {{ getConnectionPath(item) }}
-      p(:class="$style.connectionSummary") {{ item.lastScanSummary || '暂时还没有扫描结果' }}
+      p(:class="$style.connectionSummary") {{ getConnectionSummary(item) }}
       .gap-top(:class="$style.connectionActions")
         base-btn.btn(min :disabled="isSaving || isScanningId === item.id" @click="scan(item.id)") {{ isScanningId === item.id ? '扫描中...' : '扫描' }}
         base-btn.btn.gap-left(min outline :disabled="isSaving || isScanningId != ''" @click="editConnection(item)") 编辑
@@ -130,9 +130,9 @@ dd.gap-top
 </template>
 
 <script>
-import { computed, ref, onMounted } from '@common/utils/vueTools'
+import { computed, ref, onMounted, onBeforeUnmount } from '@common/utils/vueTools'
 import { dialog } from '@renderer/plugins/Dialog'
-import { getMediaConnections, saveMediaConnection, removeMediaConnection, scanMediaConnection, showSelectDialog } from '@renderer/utils/ipc'
+import { getMediaConnections, saveMediaConnection, removeMediaConnection, scanMediaConnection, showSelectDialog, onMediaConnectionScanProgress } from '@renderer/utils/ipc'
 
 const createForm = (type = 'local') => ({
   id: '',
@@ -160,6 +160,9 @@ export default {
     const isSaving = ref(false)
     const isRemovingId = ref('')
     const isScanningId = ref('')
+    const scanProgressMap = ref({})
+    const scanTimingMap = ref({})
+    const ETA_SMOOTHING_FACTOR = 0.25
 
     const sourceOptions = [
       {
@@ -349,6 +352,71 @@ export default {
       }
     }
 
+    const clearScanProgress = (connectionId) => {
+      scanProgressMap.value = Object.fromEntries(Object.entries(scanProgressMap.value).filter(([id]) => id !== connectionId))
+      scanTimingMap.value = Object.fromEntries(Object.entries(scanTimingMap.value).filter(([id]) => id !== connectionId))
+    }
+
+    const formatEta = (ms) => {
+      if (!Number.isFinite(ms) || ms <= 0) return ''
+      const totalSeconds = Math.round(ms / 1000)
+      if (totalSeconds < 1) return ''
+      if (totalSeconds < 60) return `，预计剩余 ${totalSeconds} 秒`
+      const minutes = Math.floor(totalSeconds / 60)
+      const seconds = totalSeconds % 60
+      if (minutes < 60) {
+        return seconds ? `，预计剩余 ${minutes} 分 ${seconds} 秒` : `，预计剩余 ${minutes} 分钟`
+      }
+      const hours = Math.floor(minutes / 60)
+      const leftMinutes = minutes % 60
+      return leftMinutes ? `，预计剩余 ${hours} 小时 ${leftMinutes} 分钟` : `，预计剩余 ${hours} 小时`
+    }
+
+    const updateScanTiming = (progress) => {
+      if (!progress?.connectionId) return
+      const now = Date.now()
+      const prev = scanTimingMap.value[progress.connectionId]
+      const startedAt = prev?.startedAt ?? now
+      let etaMs = prev?.etaMs ?? 0
+      let avgMsPerItem = prev?.avgMsPerItem ?? 0
+      let lastCurrent = prev?.lastCurrent ?? 0
+      let lastAt = prev?.lastAt ?? now
+
+      if (progress.stage === 'scanning' && progress.total > 0 && progress.current > 0 && progress.current < progress.total) {
+        if (progress.current > lastCurrent) {
+          const deltaItems = progress.current - lastCurrent
+          const deltaTime = Math.max(1, now - lastAt)
+          const sampleMsPerItem = deltaTime / deltaItems
+          avgMsPerItem = avgMsPerItem > 0
+            ? avgMsPerItem * (1 - ETA_SMOOTHING_FACTOR) + sampleMsPerItem * ETA_SMOOTHING_FACTOR
+            : sampleMsPerItem
+          lastCurrent = progress.current
+          lastAt = now
+        }
+        if (avgMsPerItem > 0) {
+          etaMs = Math.max(0, avgMsPerItem * (progress.total - progress.current))
+        } else {
+          const elapsed = now - startedAt
+          if (elapsed > 1000) {
+            etaMs = Math.max(0, (elapsed / progress.current) * (progress.total - progress.current))
+          }
+        }
+      } else if (progress.stage === 'done' || progress.stage === 'error') {
+        etaMs = 0
+      }
+
+      scanTimingMap.value = {
+        ...scanTimingMap.value,
+        [progress.connectionId]: {
+          startedAt,
+          etaMs,
+          avgMsPerItem,
+          lastCurrent,
+          lastAt,
+        },
+      }
+    }
+
     const remove = async(id) => {
       const confirm = await dialog.confirm({
         message: '确定要删除这个媒体连接吗？该连接已扫描的歌曲也会从媒体库中移除。',
@@ -367,15 +435,42 @@ export default {
 
     const scan = async(id) => {
       isScanningId.value = id
+      scanProgressMap.value = {
+        ...scanProgressMap.value,
+        [id]: {
+          connectionId: id,
+          stage: 'preparing',
+          current: 0,
+          total: 0,
+          message: '准备开始扫描...',
+        },
+      }
+      scanTimingMap.value = {
+        ...scanTimingMap.value,
+        [id]: {
+          startedAt: Date.now(),
+          etaMs: 0,
+          avgMsPerItem: 0,
+          lastCurrent: 0,
+          lastAt: Date.now(),
+        },
+      }
       try {
         await scanMediaConnection(id)
         await load()
       } finally {
+        clearScanProgress(id)
         isScanningId.value = ''
       }
     }
 
     const getStatusVariant = (item) => {
+      const progress = scanProgressMap.value[item.id]
+      if (progress) {
+        if (progress.stage === 'error') return 'error'
+        if (progress.stage === 'done') return 'success'
+        return 'scanning'
+      }
       if (item.lastScanStatus === 'success') return 'success'
       if (item.lastScanStatus === 'error') return 'error'
       if (item.status === 'scanning' || item.lastScanStatus === 'scanning') return 'scanning'
@@ -396,8 +491,47 @@ export default {
       return `${item.host || '--'} / ${item.share || '--'}${item.rootPath || '/'}`
     }
 
+    const getConnectionSummary = (item) => {
+      const progress = scanProgressMap.value[item.id]
+      if (progress) {
+        if (progress.stage === 'discovering') {
+          return progress.total > 0 ? `已发现 ${progress.total} 首音频，准备读取信息...` : '正在扫描目录结构...'
+        }
+        if (progress.stage === 'scanning') {
+          const etaText = formatEta(scanTimingMap.value[item.id]?.etaMs)
+          return progress.total > 0 ? `正在读取媒体信息 ${progress.current}/${progress.total}${etaText}` : '正在读取媒体信息...'
+        }
+        if (progress.stage === 'saving') {
+          return progress.total > 0 ? `正在写入媒体库 ${progress.total} 首...` : '正在写入媒体库...'
+        }
+        if (progress.stage === 'done') {
+          return progress.total > 0 ? `扫描完成，共 ${progress.total} 首` : '扫描完成'
+        }
+        if (progress.stage === 'error') return progress.message || '扫描失败'
+        return progress.message || '正在准备扫描...'
+      }
+      return item.lastScanSummary || '暂时还没有扫描结果'
+    }
+
+    let removeScanProgressListener = null
     onMounted(() => {
+      removeScanProgressListener = onMediaConnectionScanProgress(({ params }) => {
+        if (!params?.connectionId) return
+        updateScanTiming(params)
+        scanProgressMap.value = {
+          ...scanProgressMap.value,
+          [params.connectionId]: params,
+        }
+        if (params.stage === 'done' || params.stage === 'error') {
+          setTimeout(() => {
+            clearScanProgress(params.connectionId)
+          }, 1200)
+        }
+      })
       void load()
+    })
+    onBeforeUnmount(() => {
+      if (removeScanProgressListener) removeScanProgressListener()
     })
 
     return {
@@ -428,6 +562,7 @@ export default {
       getStatusVariant,
       getStatusLabel,
       getConnectionPath,
+      getConnectionSummary,
     }
   },
 }

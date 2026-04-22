@@ -59,6 +59,14 @@ interface MediaParsedMetadata {
   picUrl: string | null
 }
 
+export interface MediaScanProgress {
+  stage: 'discovering' | 'scanning'
+  current: number
+  total: number
+}
+
+export type MediaScanProgressHandler = (progress: MediaScanProgress) => void
+
 const normalizeRemotePath = (inputPath: string) => {
   if (!inputPath) return '/'
   const normalized = inputPath.replace(/\\/g, '/')
@@ -133,16 +141,28 @@ const nativePathToLocalRelativePath = (connection: MediaConnectionConfig, native
   return normalizeRemotePath(relative.replace(/\\/g, '/'))
 }
 
-const tryScanSmbNativeWindows = async(connection: MediaConnectionConfig): Promise<MediaScannedItem[] | null> => {
+const tryScanSmbNativeWindows = async(connection: MediaConnectionConfig, onProgress?: MediaScanProgressHandler): Promise<MediaScannedItem[] | null> => {
   if (process.platform !== 'win32') return null
   await connectWindowsSmb(connection)
   const cacheDir = await ensureCacheDir()
   const root = getSmbUncPath(connection, connection.rootPath ?? '/')
   const files = await walkNativeDir(root)
+  const audioFiles = files.filter(nativePath => isAudioFile(path.basename(nativePath)))
+  onProgress?.({
+    stage: 'discovering',
+    current: 0,
+    total: audioFiles.length,
+  })
   const result: MediaScannedItem[] = []
-  for (const nativePath of files) {
+  let current = 0
+  for (const nativePath of audioFiles) {
+    current += 1
+    onProgress?.({
+      stage: 'scanning',
+      current,
+      total: audioFiles.length,
+    })
     const fileName = path.basename(nativePath)
-    if (!isAudioFile(fileName)) continue
     const stat = await fs.stat(nativePath)
     const data = await fs.readFile(nativePath)
     const tempPath = path.join(cacheDir, `${connection.id}_${sanitizeName(fileName)}`)
@@ -304,16 +324,31 @@ const mapItem = (connection: MediaConnectionConfig, itemPath: string, fileName: 
   }
 }
 
-const scanWebdav = async(connection: MediaConnectionConfig): Promise<MediaScannedItem[]> => {
+const scanWebdav = async(connection: MediaConnectionConfig, onProgress?: MediaScanProgressHandler): Promise<MediaScannedItem[]> => {
   const client = createWebdavClient(connection)
   const root = normalizeRemotePath(connection.rootPath ?? '/')
   const contents = await client.getDirectoryContents(root, { deep: true }) as any[]
+  const files = contents.filter(entry => {
+    if (entry.type !== 'file') return false
+    const filename = String(entry.basename || path.basename(entry.filename || ''))
+    return isAudioFile(filename)
+  })
+  onProgress?.({
+    stage: 'discovering',
+    current: 0,
+    total: files.length,
+  })
   const cacheDir = await ensureCacheDir()
   const result: MediaScannedItem[] = []
-  for (const entry of contents) {
-    if (entry.type !== 'file') continue
+  let current = 0
+  for (const entry of files) {
+    current += 1
+    onProgress?.({
+      stage: 'scanning',
+      current,
+      total: files.length,
+    })
     const filename = String(entry.basename || path.basename(entry.filename || ''))
-    if (!isAudioFile(filename)) continue
     const remotePath = normalizeRemotePath(String(entry.filename || filename))
     const tempPath = path.join(cacheDir, `${connection.id}_${sanitizeName(filename)}`)
     const data = await client.getFileContents(remotePath)
@@ -326,15 +361,27 @@ const scanWebdav = async(connection: MediaConnectionConfig): Promise<MediaScanne
   return result
 }
 
-const scanLocal = async(connection: MediaConnectionConfig): Promise<MediaScannedItem[]> => {
+const scanLocal = async(connection: MediaConnectionConfig, onProgress?: MediaScanProgressHandler): Promise<MediaScannedItem[]> => {
   const root = getLocalRootPath(connection)
   const stats = await fs.stat(root)
   if (!stats.isDirectory()) throw new Error('Local folder path must be a directory')
   const files = await walkNativeDir(root)
+  const audioFiles = files.filter(filePath => isAudioFile(path.basename(filePath)))
+  onProgress?.({
+    stage: 'discovering',
+    current: 0,
+    total: audioFiles.length,
+  })
   const result: MediaScannedItem[] = []
-  for (const filePath of files) {
+  let current = 0
+  for (const filePath of audioFiles) {
+    current += 1
+    onProgress?.({
+      stage: 'scanning',
+      current,
+      total: audioFiles.length,
+    })
     const fileName = path.basename(filePath)
-    if (!isAudioFile(fileName)) continue
     const stat = await fs.stat(filePath)
     const metadata = await readMetadata(filePath)
     result.push(mapItem(connection, nativePathToLocalRelativePath(connection, filePath), fileName, stat.size, stat.mtimeMs, metadata))
@@ -374,10 +421,10 @@ const walkSmb = async(client: any, currentPath: string, result: string[] = []) =
   return result
 }
 
-const scanSmb = async(connection: MediaConnectionConfig): Promise<MediaScannedItem[]> => {
+const scanSmb = async(connection: MediaConnectionConfig, onProgress?: MediaScanProgressHandler): Promise<MediaScannedItem[]> => {
   if (process.platform === 'win32') {
     try {
-      const result = await tryScanSmbNativeWindows(connection)
+      const result = await tryScanSmbNativeWindows(connection, onProgress)
       if (result) return result
     } catch {}
   }
@@ -387,10 +434,22 @@ const scanSmb = async(connection: MediaConnectionConfig): Promise<MediaScannedIt
   const root = normalizeRemotePath(connection.rootPath ?? '/')
   try {
     const files = await walkSmb(client, root)
+    const audioFiles = files.filter(remotePath => isAudioFile(path.posix.basename(remotePath)))
+    onProgress?.({
+      stage: 'discovering',
+      current: 0,
+      total: audioFiles.length,
+    })
     const result: MediaScannedItem[] = []
-    for (const remotePath of files) {
+    let current = 0
+    for (const remotePath of audioFiles) {
+      current += 1
+      onProgress?.({
+        stage: 'scanning',
+        current,
+        total: audioFiles.length,
+      })
       const fileName = path.posix.basename(remotePath)
-      if (!isAudioFile(fileName)) continue
       const stats = await smbStat(client, remotePath)
       const data = await smbReadFile(client, remotePath)
       const tempPath = path.join(cacheDir, `${connection.id}_${sanitizeName(fileName)}`)
@@ -409,10 +468,10 @@ const scanSmb = async(connection: MediaConnectionConfig): Promise<MediaScannedIt
   }
 }
 
-export const scanConnection = async(connection: MediaConnectionConfig): Promise<MediaScannedItem[]> => {
-  if (connection.type === 'webdav') return scanWebdav(connection)
-  if (connection.type === 'smb') return scanSmb(connection)
-  if (connection.type === 'local') return scanLocal(connection)
+export const scanConnection = async(connection: MediaConnectionConfig, onProgress?: MediaScanProgressHandler): Promise<MediaScannedItem[]> => {
+  if (connection.type === 'webdav') return scanWebdav(connection, onProgress)
+  if (connection.type === 'smb') return scanSmb(connection, onProgress)
+  if (connection.type === 'local') return scanLocal(connection, onProgress)
   throw new Error(`Unsupported media connection type: ${connection.type}`)
 }
 
