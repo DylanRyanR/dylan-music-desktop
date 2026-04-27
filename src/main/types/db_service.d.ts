@@ -111,5 +111,45 @@ declare namespace LX {
       meta: string
     }
 
+    interface PlayEvent {
+      id: string
+      songId: string
+      songName: string
+      artistName: string
+      albumName: string
+      sourceType: LX.ReportMonthly.SourceType
+      listId: string | null
+      startedAt: number
+      endedAt: number
+      listenSeconds: number
+      totalSeconds: number
+      isValid30s: 0 | 1
+      isComplete80: 0 | 1
+      endReason: LX.ReportMonthly.EndReason
+      createdAt: number
+    }
+
+    interface PlayDailyStat {
+      dateKey: string
+      totalListenSeconds: number
+      valid30Count: number
+      complete80Count: number
+      sessionCount: number
+      skipCount: number
+      topSongsJson: string
+      topArtistsJson: string
+      hourHistogramJson: string
+      sourceShareJson: string
+      newDiscoveryJson: string
+      updatedAt: number
+    }
+
+    interface PlayYearlyStat {
+      yearKey: string
+      overviewJson: string
+      cardsJson: string
+      updatedAt: number
+    }
+
   }
 }

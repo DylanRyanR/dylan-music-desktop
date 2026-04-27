@@ -74,6 +74,15 @@ export default {
           name: 'Download',
         },
         {
+          to: '/report',
+          tips: t('monthly_report'),
+          icon: '#icon-report',
+          iconSize: '0 0 24 24',
+          size,
+          name: 'Report',
+          enable: true,
+        },
+        {
           to: '/setting',
           tips: t('setting'),
           icon: '#icon-setting',

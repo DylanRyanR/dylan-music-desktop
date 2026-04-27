@@ -55,6 +55,14 @@ const router = createRouter({
       },
     },
     {
+      path: '/report',
+      name: 'Report',
+      component: require('./views/Report/index.vue').default,
+      meta: {
+        name: 'Report',
+      },
+    },
+    {
       path: '/setting',
       name: 'Setting',
       component: require('./views/Setting/index.vue').default,

@@ -116,6 +116,13 @@ type Tables = 'db_info'
 | 'media_connection'
 | 'media_item'
 | 'index_media_item_connection'
+| 'play_events'
+| 'index_play_events_startedAt'
+| 'index_play_events_songId_startedAt'
+| 'index_play_events_artistName_startedAt'
+| 'index_play_events_sourceType_startedAt'
+| 'play_daily_stats'
+| 'play_yearly_stats'
 
 const tables = new Map<Tables, string>()
 
@@ -265,7 +272,76 @@ tables.set('index_media_item_connection', `
     "connectionId"
   );
 `)
+tables.set('play_events', `
+  CREATE TABLE "play_events" (
+    "id" TEXT NOT NULL,
+    "songId" TEXT NOT NULL,
+    "songName" TEXT NOT NULL,
+    "artistName" TEXT NOT NULL,
+    "albumName" TEXT NOT NULL,
+    "sourceType" TEXT NOT NULL,
+    "listId" TEXT,
+    "startedAt" INTEGER NOT NULL,
+    "endedAt" INTEGER NOT NULL,
+    "listenSeconds" INTEGER NOT NULL,
+    "totalSeconds" INTEGER NOT NULL,
+    "isValid30s" INTEGER NOT NULL,
+    "isComplete80" INTEGER NOT NULL,
+    "endReason" TEXT NOT NULL,
+    "createdAt" INTEGER NOT NULL,
+    PRIMARY KEY("id")
+  );
+`)
+tables.set('index_play_events_startedAt', `
+  CREATE INDEX "index_play_events_startedAt" ON "play_events" (
+    "startedAt"
+  );
+`)
+tables.set('index_play_events_songId_startedAt', `
+  CREATE INDEX "index_play_events_songId_startedAt" ON "play_events" (
+    "songId",
+    "startedAt"
+  );
+`)
+tables.set('index_play_events_artistName_startedAt', `
+  CREATE INDEX "index_play_events_artistName_startedAt" ON "play_events" (
+    "artistName",
+    "startedAt"
+  );
+`)
+tables.set('index_play_events_sourceType_startedAt', `
+  CREATE INDEX "index_play_events_sourceType_startedAt" ON "play_events" (
+    "sourceType",
+    "startedAt"
+  );
+`)
+tables.set('play_daily_stats', `
+  CREATE TABLE "play_daily_stats" (
+    "dateKey" TEXT NOT NULL,
+    "totalListenSeconds" INTEGER NOT NULL,
+    "valid30Count" INTEGER NOT NULL,
+    "complete80Count" INTEGER NOT NULL,
+    "sessionCount" INTEGER NOT NULL,
+    "skipCount" INTEGER NOT NULL,
+    "topSongsJson" TEXT NOT NULL,
+    "topArtistsJson" TEXT NOT NULL,
+    "hourHistogramJson" TEXT NOT NULL,
+    "sourceShareJson" TEXT NOT NULL,
+    "newDiscoveryJson" TEXT NOT NULL,
+    "updatedAt" INTEGER NOT NULL,
+    PRIMARY KEY("dateKey")
+  );
+`)
+tables.set('play_yearly_stats', `
+  CREATE TABLE "play_yearly_stats" (
+    "yearKey" TEXT NOT NULL,
+    "overviewJson" TEXT NOT NULL,
+    "cardsJson" TEXT NOT NULL,
+    "updatedAt" INTEGER NOT NULL,
+    PRIMARY KEY("yearKey")
+  );
+`)
 
 export default tables
 
-export const DB_VERSION = '3'
+export const DB_VERSION = '5'

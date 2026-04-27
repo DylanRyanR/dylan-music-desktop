@@ -906,6 +906,37 @@ export const onNewDesktopLyricProcess = (listener: LX.IpcRendererEventListener):
   }
 }
 
+export const trackMonthlyReportSession = async(payload: LX.ReportMonthly.TrackSessionPayload) => {
+  return rendererInvoke<LX.ReportMonthly.TrackSessionPayload>(WIN_MAIN_RENDERER_EVENT_NAME.report_monthly_track_session, payload)
+}
+export const getMonthlyReportOverview = async() => {
+  return rendererInvoke<undefined, LX.ReportMonthly.OverviewDTO>(WIN_MAIN_RENDERER_EVENT_NAME.report_monthly_get_overview, undefined)
+}
+export const getMonthlyReportCards = async() => {
+  return rendererInvoke<undefined, LX.ReportMonthly.CardsDTO>(WIN_MAIN_RENDERER_EVENT_NAME.report_monthly_get_cards, undefined)
+}
+export const exportMonthlyReportPng = async(payload: LX.ReportMonthly.ExportPngPayload) => {
+  return rendererInvoke<LX.ReportMonthly.ExportPngPayload, LX.ReportMonthly.ExportPngResult>(WIN_MAIN_RENDERER_EVENT_NAME.report_monthly_export_png, payload)
+}
+export const rebuildMonthlyReportCache = async(days: 30 | 90 | 400) => {
+  return rendererInvoke<30 | 90 | 400, LX.ReportMonthly.RebuildCacheResult>(WIN_MAIN_RENDERER_EVENT_NAME.report_monthly_rebuild_cache, days)
+}
+export const getYearlyReportYearOptions = async() => {
+  return rendererInvoke<undefined, LX.ReportYearly.YearOption[]>(WIN_MAIN_RENDERER_EVENT_NAME.report_yearly_get_year_options, undefined)
+}
+export const getYearlyReportOverview = async(payload: LX.ReportYearly.GetPayload) => {
+  return rendererInvoke<LX.ReportYearly.GetPayload, LX.ReportYearly.OverviewDTO>(WIN_MAIN_RENDERER_EVENT_NAME.report_yearly_get_overview, payload)
+}
+export const getYearlyReportCards = async(payload: LX.ReportYearly.GetPayload) => {
+  return rendererInvoke<LX.ReportYearly.GetPayload, LX.ReportYearly.CardsDTO>(WIN_MAIN_RENDERER_EVENT_NAME.report_yearly_get_cards, payload)
+}
+export const exportYearlyReportPng = async(payload: LX.ReportYearly.ExportPngPayload) => {
+  return rendererInvoke<LX.ReportYearly.ExportPngPayload, LX.ReportYearly.ExportPngResult>(WIN_MAIN_RENDERER_EVENT_NAME.report_yearly_export_png, payload)
+}
+export const rebuildYearlyReportCache = async(payload: LX.ReportYearly.RebuildPayload) => {
+  return rendererInvoke<LX.ReportYearly.RebuildPayload, LX.ReportYearly.RebuildCacheResult>(WIN_MAIN_RENDERER_EVENT_NAME.report_yearly_rebuild_cache, payload)
+}
+
 
 export const downloadTasksGet = async() => {
   return rendererInvoke<LX.Download.ListItem[]>(WIN_MAIN_RENDERER_EVENT_NAME.download_list_get)

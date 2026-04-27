@@ -13,6 +13,8 @@ import media from './media'
 import download from './download'
 import soundEffect from './soundEffect'
 import openAPI from './openAPI'
+import report from './report'
+import reportYearly from './reportYearly'
 import { sendEvent } from '../main'
 
 export * from './app'
@@ -41,9 +43,10 @@ export default () => {
   download()
   soundEffect()
   openAPI()
+  report()
+  reportYearly()
 
   global.lx.event_app.on('updated_config', (keys, setting) => {
     sendConfigChange(setting)
   })
 }
-
