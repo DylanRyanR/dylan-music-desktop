@@ -26,6 +26,18 @@
           item-name="label"
           @update:model-value="handleYearChange"
         />
+        <base-selection
+          v-if="isYearlyMode"
+          :model-value="yearlyExportPosterStyle"
+          :list="yearlyPosterStyleList"
+          :class="$style.exportStyleSelection"
+          item-key="id"
+          item-name="label"
+          @update:model-value="handleYearlyPosterStyleChange"
+        />
+        <base-btn v-if="isYearlyMode" outline min :disabled="!hasYearlyData || activeLoading || exporting" @click="openYearlyExportPreview">
+          {{ yearlyPreviewBtnText }}
+        </base-btn>
         <base-btn outline min :disabled="activeLoading || rebuilding" @click="handleReload">{{ t('monthly_report__refresh') }}</base-btn>
         <template v-if="isYearlyMode">
           <base-btn outline min :disabled="activeLoading || rebuilding" @click="handleRebuildYearly">
@@ -68,7 +80,7 @@
       <article v-for="idx in 8" :key="idx" :class="$style.skeletonCard" />
     </section>
 
-    <section v-else-if="isYearlyMode && hasYearlyData">
+    <section v-else-if="isYearlyMode && hasYearlyData" :class="$style.yearlySection">
       <ReportYearly :overview="yearlyOverview" :cards="yearlyCards" />
     </section>
 
@@ -89,6 +101,50 @@
       <p :class="$style.emptyTitle">{{ activeEmptyText }}</p>
       <base-btn min @click="handleReload">{{ t('monthly_report__refresh') }}</base-btn>
     </section>
+
+    <material-modal :show="showYearlyExportPreview" teleport="#view" width="76%" max-width="1120px" @close="handleCloseYearlyExportPreview">
+      <main class="scroll" :class="$style.previewModal">
+        <header :class="$style.previewHeader">
+          <h2 :class="$style.previewTitle">{{ yearlyPreviewTitle }}</h2>
+          <p :class="$style.previewSubtitle">{{ yearlyPreviewSubtitle }}</p>
+        </header>
+        <section v-if="yearlyPreviewLoading" :class="$style.previewState">
+          <p>{{ yearlyPreviewLoadingText }}</p>
+        </section>
+        <section v-else-if="yearlyPreviewError" :class="$style.previewState">
+          <p>{{ yearlyPreviewError }}</p>
+          <base-btn outline min @click="refreshYearlyExportPreview">{{ yearlyPreviewRetryText }}</base-btn>
+        </section>
+        <section v-else :class="$style.previewGrid">
+          <article
+            v-for="item in yearlyPosterStyleList"
+            :key="item.id"
+            :class="[$style.previewCard, { [$style.previewCardActive]: item.id === yearlyExportPosterStyle }]"
+          >
+            <header :class="$style.previewCardHead">
+              <h3 :class="$style.previewCardTitle">{{ item.label }}</h3>
+              <base-btn
+                min
+                outline
+                :disabled="item.id === yearlyExportPosterStyle"
+                @click="handleYearlyPosterStyleChange(item.id)"
+              >
+                {{ item.id === yearlyExportPosterStyle ? yearlyPreviewSelectedText : yearlyPreviewUseText }}
+              </base-btn>
+            </header>
+            <div :class="$style.previewImageWrap">
+              <img
+                v-if="getYearlyPreviewImage(item.id)"
+                :src="getYearlyPreviewImage(item.id)"
+                :alt="item.label"
+                :class="$style.previewImage"
+              >
+              <p v-else :class="$style.previewImageEmpty">{{ yearlyPreviewEmptyText }}</p>
+            </div>
+          </article>
+        </section>
+      </main>
+    </material-modal>
   </main>
 </template>
 
@@ -115,9 +171,12 @@ import {
   yearlyLoading,
   yearlyError,
   yearlyLastUpdatedAt,
+  yearlyExportPosterStyle,
+  setYearlyExportPosterStyle,
 } from '@renderer/store/reportYearly/state'
 import {
   loadYearlyReport,
+  createYearlyReportPosterPreview,
   exportYearlyReport,
   rebuildAndReloadYearlyReport,
 } from '@renderer/store/reportYearly/action'
@@ -144,6 +203,13 @@ const exporting = ref(false)
 const rebuilding = ref(false)
 const rebuildingDays = ref<30 | 90 | 400 | null>(null)
 const actionNotice = ref<{ type: 'success' | 'error' | 'info', text: string } | null>(null)
+const showYearlyExportPreview = ref(false)
+const yearlyPreviewLoading = ref(false)
+const yearlyPreviewError = ref('')
+const yearlyPreviewImages = ref<Record<'classic' | 'poster', string>>({
+  classic: '',
+  poster: '',
+})
 
 let actionNoticeTimer: ReturnType<typeof setTimeout> | null = null
 const hideActionNotice = () => {
@@ -193,6 +259,25 @@ const yearSelectionList = computed(() => {
     label: item.label,
   }))
 })
+
+const yearlyPosterStyleList = computed(() => [
+  {
+    id: 'poster',
+    label: getText('yearly_report__export_style_poster', '海报彩色'),
+  },
+  {
+    id: 'classic',
+    label: getText('yearly_report__export_style_classic', '经典深色'),
+  },
+])
+const yearlyPreviewBtnText = computed(() => getText('yearly_report__export_preview_btn', '预览导出'))
+const yearlyPreviewTitle = computed(() => getText('yearly_report__export_preview_title', '年报导出预览'))
+const yearlyPreviewSubtitle = computed(() => getText('yearly_report__export_preview_subtitle', '预览仅用于风格确认，实际导出分辨率为 1080 × 1920'))
+const yearlyPreviewLoadingText = computed(() => getText('yearly_report__export_preview_loading', '正在生成预览...'))
+const yearlyPreviewRetryText = computed(() => getText('retry', '重试'))
+const yearlyPreviewUseText = computed(() => getText('yearly_report__export_preview_use', '使用此风格'))
+const yearlyPreviewSelectedText = computed(() => getText('yearly_report__export_preview_selected', '当前风格'))
+const yearlyPreviewEmptyText = computed(() => getText('monthly_report__no_data', '暂无数据'))
 
 const reportEyebrow = computed(() => {
   if (isYearlyMode.value) return yearlyModeText.value
@@ -262,12 +347,18 @@ const handleReload = async(silent = false) => {
 const handleExport = async() => {
   exporting.value = true
   try {
+    const yearlyStyleLabel = yearlyExportPosterStyle.value === 'classic'
+      ? getText('yearly_report__export_style_classic', '经典深色')
+      : getText('yearly_report__export_style_poster', '海报彩色')
     const result = isYearlyMode.value
-      ? await exportYearlyReport()
+      ? await exportYearlyReport(yearlyExportPosterStyle.value)
       : await exportMonthlyReport()
     if (result.filePath) {
       const successText = isYearlyMode.value
-        ? getText('yearly_report__notice_export_success', '导出成功：{path}', { path: formatNoticePath(result.filePath) })
+        ? getText('yearly_report__notice_export_success_with_style', '已导出 {style}：{path}', {
+          style: yearlyStyleLabel,
+          path: formatNoticePath(result.filePath),
+        })
         : t('monthly_report__notice_export_success', { path: formatNoticePath(result.filePath) })
       showActionNotice('success', successText)
     } else {
@@ -284,6 +375,44 @@ const handleExport = async() => {
   } finally {
     exporting.value = false
   }
+}
+
+const handleYearlyPosterStyleChange = (styleId: string | number) => {
+  if (!isYearlyMode.value) return
+  if (styleId !== 'poster' && styleId !== 'classic') return
+  setYearlyExportPosterStyle(styleId)
+}
+
+const getYearlyPreviewImage = (styleId: string | number) => {
+  if (styleId === 'classic') return yearlyPreviewImages.value.classic
+  if (styleId === 'poster') return yearlyPreviewImages.value.poster
+  return ''
+}
+
+const refreshYearlyExportPreview = async() => {
+  if (!isYearlyMode.value || !hasYearlyData.value) return
+  yearlyPreviewLoading.value = true
+  yearlyPreviewError.value = ''
+  try {
+    yearlyPreviewImages.value = {
+      poster: createYearlyReportPosterPreview('poster'),
+      classic: createYearlyReportPosterPreview('classic'),
+    }
+  } catch (err: any) {
+    yearlyPreviewError.value = `${getText('yearly_report__export_preview_failed', '预览生成失败')}: ${err?.message ?? String(err)}`
+  } finally {
+    yearlyPreviewLoading.value = false
+  }
+}
+
+const openYearlyExportPreview = async() => {
+  if (!isYearlyMode.value || !hasYearlyData.value) return
+  showYearlyExportPreview.value = true
+  await refreshYearlyExportPreview()
+}
+
+const handleCloseYearlyExportPreview = () => {
+  showYearlyExportPreview.value = false
 }
 
 const handleRebuildMonthly = async(days: 30 | 90 | 400) => {
@@ -329,6 +458,9 @@ const handleYearChange = async(year: number) => {
 }
 
 watch(reportMode, (mode) => {
+  if (mode !== 'yearly') {
+    showYearlyExportPreview.value = false
+  }
   if (mode === 'yearly') {
     if (!hasYearlyData.value && !yearlyLoading.value) {
       void handleReload(true)
@@ -429,12 +561,24 @@ onBeforeUnmount(() => {
   --selection-width: 112px;
 }
 
+.exportStyleSelection {
+  --selection-width: 120px;
+}
+
 .grid {
   flex: auto;
   min-height: 0;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
+}
+
+.yearlySection {
+  flex: auto;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+  display: flex;
 }
 
 .actionNotice {
@@ -551,6 +695,103 @@ onBeforeUnmount(() => {
   animation: loading 1.4s linear infinite;
 }
 
+.previewModal {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.previewHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.previewTitle {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.previewSubtitle {
+  margin: 0;
+  font-size: 12px;
+  opacity: .72;
+}
+
+.previewState {
+  min-height: 300px;
+  border-radius: 16px;
+  border: 1px dashed color-mix(in srgb, var(--color-list-header-border-bottom) 66%, transparent);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 13px;
+  opacity: .78;
+}
+
+.previewGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.previewCard {
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--color-list-header-border-bottom) 68%, transparent);
+  background: color-mix(in srgb, var(--color-primary-background) 90%, rgba(255, 255, 255, .04));
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.previewCardActive {
+  border-color: color-mix(in srgb, var(--color-primary) 42%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-primary) 22%, transparent);
+}
+
+.previewCardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.previewCardTitle {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.previewImageWrap {
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--color-list-header-border-bottom) 58%, transparent);
+  min-height: 286px;
+  background:
+    radial-gradient(circle at 10% 0%, color-mix(in srgb, var(--color-primary) 22%, transparent), transparent 45%),
+    color-mix(in srgb, var(--color-primary-background-hover) 90%, rgba(0, 0, 0, .1));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.previewImage {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.previewImageEmpty {
+  margin: 0;
+  font-size: 12px;
+  opacity: .7;
+}
+
 @keyframes loading {
   from {
     background-position: 100% 0;
@@ -575,6 +816,10 @@ onBeforeUnmount(() => {
 
   .cardSpan2 {
     grid-column: span 2;
+  }
+
+  .previewGrid {
+    grid-template-columns: 1fr;
   }
 }
 
