@@ -48,7 +48,7 @@ const formatPercent = (value: number) => `${(Math.max(0, Math.min(1, value)) * 1
 const trimText = (text: string, maxLength: number) => {
   if (!text) return ''
   if (text.length <= maxLength) return text
-  return `${text.slice(0, Math.max(0, maxLength - 1))}…`
+  return `${text.slice(0, Math.max(0, maxLength - 1))}...`
 }
 
 const drawRoundedRect = (
@@ -125,22 +125,22 @@ const drawYearlyPosterClassic = (overview: LX.ReportYearly.OverviewDTO, cards: L
 
   ctx.fillStyle = '#f8fafc'
   ctx.font = '700 62px "Segoe UI", "PingFang SC", sans-serif'
-  ctx.fillText(resolveI18n('yearly_report__poster_title', '洛雪音乐年度报告'), 80, 150)
+  ctx.fillText(resolveI18n('yearly_report__poster_title', 'LX Music Yearly Report'), 80, 150)
   ctx.font = '500 36px "Segoe UI", "PingFang SC", sans-serif'
   ctx.fillStyle = 'rgba(248, 250, 252, .84)'
-  ctx.fillText(resolveI18n('yearly_report__poster_subtitle', `${overview.year} 听歌回顾`, { year: overview.year }), 80, 208)
+  ctx.fillText(resolveI18n('yearly_report__poster_subtitle', `${overview.year} Listening Recap`, { year: overview.year }), 80, 208)
 
   ctx.fillStyle = '#ffffff'
   ctx.font = '700 94px "Segoe UI", "PingFang SC", sans-serif'
   ctx.fillText(formatDuration(overview.totalListenSeconds), 80, 390)
   ctx.font = '500 32px "Segoe UI", "PingFang SC", sans-serif'
   ctx.fillStyle = 'rgba(255, 255, 255, .78)'
-  ctx.fillText(resolveI18n('yearly_report__poster_total_line', `总收听 ${overview.sessionCount} 次`, { sessions: overview.sessionCount }), 84, 446)
+  ctx.fillText(resolveI18n('yearly_report__poster_total_line', `Total listens ${overview.sessionCount}`, { sessions: overview.sessionCount }), 84, 446)
 
   const statRows: Array<[string, string]> = [
-    [resolveI18n('yearly_report__active_days', '活跃天数'), `${overview.activeDays}`],
-    [resolveI18n('yearly_report__new_song_ratio', '新歌占比'), formatPercent(overview.newSongRatio)],
-    [resolveI18n('yearly_report__new_artist_ratio', '新歌手占比'), formatPercent(overview.newArtistRatio)],
+    [resolveI18n('yearly_report__active_days', 'Active Days'), `${overview.activeDays}`],
+    [resolveI18n('yearly_report__new_song_ratio', 'New Song Ratio'), formatPercent(overview.newSongRatio)],
+    [resolveI18n('yearly_report__new_artist_ratio', 'New Artist Ratio'), formatPercent(overview.newArtistRatio)],
   ]
 
   let rowY = 548
@@ -156,7 +156,7 @@ const drawYearlyPosterClassic = (overview: LX.ReportYearly.OverviewDTO, cards: L
 
   ctx.fillStyle = '#ffffff'
   ctx.font = '700 44px "Segoe UI", "PingFang SC", sans-serif'
-  ctx.fillText(resolveI18n('yearly_report__poster_replay_title', '年度反复听'), 80, 958)
+  ctx.fillText(resolveI18n('yearly_report__poster_replay_title', 'Most Replayed'), 80, 958)
 
   const replaySongs = cards.replaySongs.slice(0, 6)
   let replayY = 1028
@@ -169,14 +169,14 @@ const drawYearlyPosterClassic = (overview: LX.ReportYearly.OverviewDTO, cards: L
     ctx.fillText(item.songName.slice(0, 26), 136, replayY)
     ctx.fillStyle = 'rgba(255, 255, 255, .68)'
     ctx.font = '500 26px "Segoe UI", "PingFang SC", sans-serif'
-    ctx.fillText(`${item.artistName.slice(0, 16)} · x${item.count}`, 612, replayY)
+    ctx.fillText(`${item.artistName.slice(0, 16)} / x${item.count}`, 612, replayY)
     replayY += 72
   })
 
   ctx.fillStyle = 'rgba(255, 255, 255, .62)'
   ctx.font = '500 26px "Segoe UI", "PingFang SC", sans-serif'
-  ctx.fillText(resolveI18n('yearly_report__poster_generated_at', `生成于 ${new Date().toLocaleString()}`, { time: new Date().toLocaleString() }), 82, 1778)
-  ctx.fillText(resolveI18n('yearly_report__poster_share_line', '用洛雪音乐分享你的年度节奏'), 82, 1830)
+  ctx.fillText(resolveI18n('yearly_report__poster_generated_at', `Generated at ${new Date().toLocaleString()}`, { time: new Date().toLocaleString() }), 82, 1778)
+  ctx.fillText(resolveI18n('yearly_report__poster_share_line', 'Share your yearly rhythm with LX Music'), 82, 1830)
 
   return canvas.toDataURL('image/png')
 }
@@ -214,115 +214,136 @@ const drawYearlyPoster = (overview: LX.ReportYearly.OverviewDTO, cards: LX.Repor
     ctx.fillRect(x, y, 110, 110)
   }
 
-  const mainTop = 76
-  fillGlassCard(ctx, 58, mainTop, 964, 448, 34)
+  const heroTop = 76
+  const heroHeight = 360
+  const middleTop = heroTop + heroHeight + 34
+  const middleHeight = 360
+  const replayTop = middleTop + middleHeight + 34
+  const replayHeight = 760
+  const footerTop = replayTop + replayHeight + 28
+  const footerHeight = 128
+
+  const contentLeft = 58
+  const contentWidth = 964
+  const innerLeft = 92
+  const innerRight = 988
+  const columnGap = 24
+  const leftColumnWidth = 560
+  const rightColumnWidth = contentWidth - (innerLeft - contentLeft) * 2 - leftColumnWidth - columnGap
+
+  fillGlassCard(ctx, contentLeft, heroTop, contentWidth, heroHeight, 34)
 
   ctx.fillStyle = '#f8fafc'
-  ctx.font = '700 58px "Segoe UI", "PingFang SC", sans-serif'
-  ctx.fillText(resolveI18n('yearly_report__poster_title', '洛雪音乐年度报告'), 96, 172)
-  ctx.font = '500 34px "Segoe UI", "PingFang SC", sans-serif'
+  ctx.font = '700 56px "Segoe UI", "PingFang SC", sans-serif'
+  ctx.fillText(resolveI18n('yearly_report__poster_title', 'LX Music Yearly Report'), innerLeft, heroTop + 88)
+  ctx.font = '500 32px "Segoe UI", "PingFang SC", sans-serif'
   ctx.fillStyle = 'rgba(248, 250, 252, .84)'
-  ctx.fillText(resolveI18n('yearly_report__poster_subtitle', `${overview.year} 听歌回顾`, { year: overview.year }), 96, 224)
+  ctx.fillText(resolveI18n('yearly_report__poster_subtitle', `${overview.year} Listening Recap`, { year: overview.year }), innerLeft, heroTop + 138)
 
   ctx.fillStyle = '#ffffff'
-  ctx.font = '700 102px "Segoe UI", "PingFang SC", sans-serif'
-  ctx.fillText(formatDuration(overview.totalListenSeconds), 96, 374)
-  ctx.font = '500 32px "Segoe UI", "PingFang SC", sans-serif'
+  ctx.font = '700 100px "Segoe UI", "PingFang SC", sans-serif'
+  ctx.fillText(formatDuration(overview.totalListenSeconds), innerLeft, heroTop + 282)
+  ctx.font = '500 30px "Segoe UI", "PingFang SC", sans-serif'
   ctx.fillStyle = 'rgba(255, 255, 255, .78)'
-  ctx.fillText(resolveI18n('yearly_report__poster_total_line', `总收听 ${overview.sessionCount} 次`, { sessions: overview.sessionCount }), 98, 430)
+  ctx.fillText(resolveI18n('yearly_report__poster_total_line', `Total listens ${overview.sessionCount}`, { sessions: overview.sessionCount }), innerLeft + 4, heroTop + 334)
 
   const statCards: Array<{ label: string, value: string }> = [
-    { label: resolveI18n('yearly_report__active_days', '活跃天数'), value: `${overview.activeDays}` },
-    { label: resolveI18n('yearly_report__new_song_ratio', '新歌占比'), value: formatPercent(overview.newSongRatio) },
-    { label: resolveI18n('yearly_report__new_artist_ratio', '新歌手占比'), value: formatPercent(overview.newArtistRatio) },
+    { label: resolveI18n('yearly_report__active_days', 'Active Days'), value: `${overview.activeDays}` },
+    { label: resolveI18n('yearly_report__new_song_ratio', 'New Song Ratio'), value: formatPercent(overview.newSongRatio) },
+    { label: resolveI18n('yearly_report__new_artist_ratio', 'New Artist Ratio'), value: formatPercent(overview.newArtistRatio) },
   ]
-  let statX = 96
-  const statY = 454
-  for (const item of statCards) {
-    fillGlassCard(ctx, statX, statY, 298, 126, 20)
-    ctx.fillStyle = 'rgba(240, 248, 255, .74)'
-    ctx.font = '500 24px "Segoe UI", "PingFang SC", sans-serif'
-    ctx.fillText(item.label, statX + 18, statY + 46)
-    ctx.fillStyle = '#ffffff'
-    ctx.font = '700 40px "Segoe UI", "PingFang SC", sans-serif'
-    ctx.fillText(item.value, statX + 18, statY + 96)
-    statX += 322
-  }
 
-  fillGlassCard(ctx, 58, 560, 964, 294, 30)
+  fillGlassCard(ctx, contentLeft, middleTop, contentWidth, middleHeight, 30)
+
   ctx.fillStyle = '#ffffff'
-  ctx.font = '700 42px "Segoe UI", "PingFang SC", sans-serif'
-  ctx.fillText(resolveI18n('yearly_report__favorites', 'Year Favorites'), 92, 636)
+  ctx.font = '700 40px "Segoe UI", "PingFang SC", sans-serif'
+  ctx.fillText(resolveI18n('yearly_report__favorites', 'Year Favorites'), innerLeft, middleTop + 68)
 
   const topSong = cards.yearFavorites.song
   const topArtist = cards.yearFavorites.artist
   const topAlbum = cards.yearFavorites.album
   const favoriteRows = [
     [
-      resolveI18n('yearly_report__top_song', '年度歌曲'),
-      trimText(topSong.songName || resolveI18n('monthly_report__no_data', '暂无数据'), 20),
-      trimText(topSong.artistName || resolveI18n('monthly_report__no_data', '暂无数据'), 18),
+      resolveI18n('yearly_report__top_song', 'Top Song'),
+      trimText(topSong.songName || resolveI18n('monthly_report__no_data', 'No Data'), 24),
+      trimText(topSong.artistName || resolveI18n('monthly_report__no_data', 'No Data'), 20),
     ],
     [
-      resolveI18n('yearly_report__top_artist', '年度歌手'),
-      trimText(topArtist.artistName || resolveI18n('monthly_report__no_data', '暂无数据'), 20),
-      `${topArtist.count}次 · ${formatDuration(topArtist.seconds)}`,
+      resolveI18n('yearly_report__top_artist', 'Top Artist'),
+      trimText(topArtist.artistName || resolveI18n('monthly_report__no_data', 'No Data'), 24),
+      `${topArtist.count}x / ${formatDuration(topArtist.seconds)}`,
     ],
     [
-      resolveI18n('yearly_report__top_album', '年度专辑'),
-      trimText(topAlbum.albumName || resolveI18n('monthly_report__no_data', '暂无数据'), 20),
-      trimText(`${topAlbum.artistName || resolveI18n('monthly_report__no_data', '暂无数据')} · ${topAlbum.count}次`, 24),
+      resolveI18n('yearly_report__top_album', 'Top Album'),
+      trimText(topAlbum.albumName || resolveI18n('monthly_report__no_data', 'No Data'), 24),
+      trimText(`${topAlbum.artistName || resolveI18n('monthly_report__no_data', 'No Data')} / ${topAlbum.count}x`, 28),
     ],
   ]
 
-  let favoriteY = 694
+  let favoriteY = middleTop + 134
   for (const [label, main, sub] of favoriteRows) {
     ctx.fillStyle = 'rgba(232, 242, 255, .66)'
     ctx.font = '500 24px "Segoe UI", "PingFang SC", sans-serif'
-    ctx.fillText(label, 96, favoriteY)
+    ctx.fillText(label, innerLeft, favoriteY)
     ctx.fillStyle = '#ffffff'
     ctx.font = '700 34px "Segoe UI", "PingFang SC", sans-serif'
-    ctx.fillText(main, 282, favoriteY)
+    ctx.fillText(main, innerLeft, favoriteY + 42)
     ctx.fillStyle = 'rgba(232, 242, 255, .72)'
     ctx.font = '500 24px "Segoe UI", "PingFang SC", sans-serif'
-    ctx.fillText(sub, 282, favoriteY + 36)
-    favoriteY += 80
+    ctx.fillText(sub, innerLeft, favoriteY + 78)
+    favoriteY += 96
   }
 
-  fillGlassCard(ctx, 58, 888, 964, 634, 30)
+  let statY = middleTop + 54
+  const statX = innerLeft + leftColumnWidth + columnGap
+  for (const item of statCards) {
+    fillGlassCard(ctx, statX, statY, rightColumnWidth, 86, 18)
+    ctx.fillStyle = 'rgba(240, 248, 255, .72)'
+    ctx.font = '500 22px "Segoe UI", "PingFang SC", sans-serif'
+    ctx.fillText(item.label, statX + 20, statY + 34)
+    ctx.fillStyle = '#ffffff'
+    ctx.font = '700 36px "Segoe UI", "PingFang SC", sans-serif'
+    ctx.fillText(item.value, statX + 20, statY + 68)
+    statY += 106
+  }
+
+  fillGlassCard(ctx, contentLeft, replayTop, contentWidth, replayHeight, 30)
 
   ctx.fillStyle = '#ffffff'
-  ctx.font = '700 44px "Segoe UI", "PingFang SC", sans-serif'
-  ctx.fillText(resolveI18n('yearly_report__poster_replay_title', '年度反复听'), 92, 966)
+  ctx.font = '700 42px "Segoe UI", "PingFang SC", sans-serif'
+  ctx.fillText(resolveI18n('yearly_report__poster_replay_title', 'Most Replayed'), innerLeft, replayTop + 70)
 
-  const replaySongs = cards.replaySongs.slice(0, 3)
-  let replayY = 1048
+  const replaySongs = cards.replaySongs.slice(0, 5)
+  let replayY = replayTop + 128
   replaySongs.forEach((item, index) => {
-    fillGlassCard(ctx, 90, replayY - 34, 900, 140, 18)
-    ctx.fillStyle = 'rgba(255, 255, 255, .84)'
-    ctx.font = '700 34px "Segoe UI", "PingFang SC", sans-serif'
-    ctx.fillText(`#${index + 1}`, 120, replayY + 12)
+    fillGlassCard(ctx, innerLeft - 2, replayY - 28, 900, 106, 18)
+    ctx.fillStyle = 'rgba(255, 255, 255, .78)'
+    ctx.font = '700 30px "Segoe UI", "PingFang SC", sans-serif'
+    ctx.fillText(`#${index + 1}`, innerLeft + 24, replayY + 18)
     ctx.fillStyle = '#ffffff'
-    ctx.font = '700 34px "Segoe UI", "PingFang SC", sans-serif'
-    ctx.fillText(trimText(item.songName, 24), 232, replayY + 6)
+    ctx.font = '700 32px "Segoe UI", "PingFang SC", sans-serif'
+    ctx.fillText(trimText(item.songName, 28), innerLeft + 126, replayY + 14)
     ctx.fillStyle = 'rgba(255, 255, 255, .68)'
-    ctx.font = '500 25px "Segoe UI", "PingFang SC", sans-serif'
-    ctx.fillText(`${trimText(item.artistName, 18)} · x${item.count} · ${formatDuration(item.seconds)}`, 232, replayY + 44)
-    replayY += 166
+    ctx.font = '500 22px "Segoe UI", "PingFang SC", sans-serif'
+    ctx.fillText(trimText(item.artistName, 22), innerLeft + 126, replayY + 48)
+    ctx.save()
+    ctx.textAlign = 'right'
+    ctx.fillText(`x${item.count} / ${formatDuration(item.seconds)}`, innerRight - 24, replayY + 48)
+    ctx.restore()
+    replayY += 126
   })
 
-  const footerTop = 1570
-  fillGlassCard(ctx, 58, footerTop, 964, 250, 26)
+  fillGlassCard(ctx, contentLeft, footerTop, contentWidth, footerHeight, 24)
   ctx.fillStyle = '#ffffff'
-  ctx.font = '700 40px "Segoe UI", "PingFang SC", sans-serif'
-  ctx.fillText(resolveI18n('yearly_report__story_ending_title', `${overview.year}，谢谢音乐继续陪你`, { year: overview.year }), 92, footerTop + 74)
-  ctx.fillStyle = 'rgba(255, 255, 255, .78)'
-  ctx.font = '500 28px "Segoe UI", "PingFang SC", sans-serif'
-  ctx.fillText(resolveI18n('yearly_report__poster_share_line', '用洛雪音乐分享你的年度节奏'), 92, footerTop + 126)
+  ctx.font = '700 32px "Segoe UI", "PingFang SC", sans-serif'
+  ctx.fillText(resolveI18n('yearly_report__story_ending_title', `${overview.year}, thanks for listening`, { year: overview.year }), innerLeft, footerTop + 48)
   ctx.fillStyle = 'rgba(255, 255, 255, .62)'
-  ctx.font = '500 23px "Segoe UI", "PingFang SC", sans-serif'
-  ctx.fillText(resolveI18n('yearly_report__poster_generated_at', `生成于 ${new Date().toLocaleString()}`, { time: new Date().toLocaleString() }), 92, footerTop + 174)
-  ctx.fillText(`LX Music · ${overview.year}`, 92, footerTop + 212)
+  ctx.font = '500 22px "Segoe UI", "PingFang SC", sans-serif'
+  ctx.fillText(resolveI18n('yearly_report__poster_generated_at', `Generated at ${new Date().toLocaleString()}`, { time: new Date().toLocaleString() }), innerLeft, footerTop + 84)
+  ctx.save()
+  ctx.textAlign = 'right'
+  ctx.fillText(`LX Music / ${overview.year}`, innerRight - 24, footerTop + 84)
+  ctx.restore()
 
   return canvas.toDataURL('image/png')
 }
