@@ -161,6 +161,7 @@ const cardsData = computed<LX.ReportYearly.CardsDTO>(() => props.cards ?? {
   min-width: 0;
   display: grid;
   gap: 12px;
+  width: 100%;
 }
 
 .layoutStory {
@@ -242,6 +243,7 @@ const cardsData = computed<LX.ReportYearly.CardsDTO>(() => props.cards ?? {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
   align-content: start;
+  width: 100%;
 }
 
 .span2 {

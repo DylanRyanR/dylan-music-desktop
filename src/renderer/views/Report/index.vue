@@ -575,6 +575,12 @@ onBeforeUnmount(() => {
   min-height: 0;
   min-width: 0;
   display: flex;
+  width: 100%;
+}
+
+.yearlySection > * {
+  flex: 1 1 auto;
+  width: 100%;
 }
 
 .actionNotice {
