@@ -45,12 +45,12 @@
       <FreshnessCard :overview="overviewData" />
       <YearFavoritesCard :cards="cardsData" />
 
+      <ReplaySongsCard :cards="cardsData" :class="$style.spanFull" />
       <SeasonalFavoritesCard :cards="cardsData" />
       <WeeklyHabitCard :cards="cardsData" />
       <NightOwlCard :cards="cardsData" />
-      <ReplaySongsCard :cards="cardsData" :class="$style.span2" />
       <ArtistTimelineCard :cards="cardsData" />
-      <YearRankCard :cards="cardsData" />
+      <YearRankCard :cards="cardsData" :class="$style.span2" />
       <EnrichmentPlaceholderCard :cards="cardsData" :class="$style.span2" />
     </section>
   </section>
@@ -235,6 +235,10 @@ const cardsData = computed<LX.ReportYearly.CardsDTO>(() => props.cards ?? {
   grid-column: span 2;
 }
 
+.spanFull {
+  grid-column: 1 / -1;
+}
+
 .emptyState {
   min-height: 260px;
   border-radius: 18px;
@@ -254,6 +258,10 @@ const cardsData = computed<LX.ReportYearly.CardsDTO>(() => props.cards ?? {
 @media (max-width: 1380px) {
   .grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .spanFull {
+    grid-column: span 2;
   }
 }
 
@@ -292,6 +300,10 @@ const cardsData = computed<LX.ReportYearly.CardsDTO>(() => props.cards ?? {
   }
 
   .span2 {
+    grid-column: span 1;
+  }
+
+  .spanFull {
     grid-column: span 1;
   }
 }
