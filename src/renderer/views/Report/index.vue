@@ -574,7 +574,6 @@ onBeforeUnmount(() => {
   flex: auto;
   min-height: 0;
   min-width: 0;
-  overflow: hidden;
   display: flex;
 }
 

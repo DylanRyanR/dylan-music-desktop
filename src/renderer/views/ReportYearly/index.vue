@@ -1,5 +1,11 @@
 <template>
-  <section v-if="hasData" :class="$style.layout">
+  <section
+    v-if="hasData"
+    :class="[
+      $style.layout,
+      viewMode === 'story' ? $style.layoutStory : $style.layoutGrid,
+    ]"
+  >
     <header :class="$style.toolbar">
       <div :class="$style.toolbarPrimary">
         <p :class="$style.modeLabel">{{ text('yearly_report__story_mode_label', '展示模式') }}</p>
@@ -151,12 +157,21 @@ const cardsData = computed<LX.ReportYearly.CardsDTO>(() => props.cards ?? {
 
 <style lang="less" module>
 .layout {
-  height: 100%;
   min-height: 0;
   min-width: 0;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
   gap: 12px;
+}
+
+.layoutStory {
+  height: 100%;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.layoutGrid {
+  height: auto;
+  grid-template-rows: auto auto;
+  align-content: start;
 }
 
 .toolbar {
@@ -223,12 +238,10 @@ const cardsData = computed<LX.ReportYearly.CardsDTO>(() => props.cards ?? {
 }
 
 .grid {
-  min-height: 0;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
-  overflow: auto;
-  padding-right: 2px;
+  align-content: start;
 }
 
 .span2 {
