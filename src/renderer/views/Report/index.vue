@@ -26,25 +26,8 @@
           item-name="label"
           @update:model-value="handleYearChange"
         />
-        <base-selection
-          v-if="isYearlyMode"
-          :model-value="yearlyExportPosterStyle"
-          :list="yearlyPosterStyleList"
-          :class="$style.exportStyleSelection"
-          item-key="id"
-          item-name="label"
-          @update:model-value="handleYearlyPosterStyleChange"
-        />
-        <base-btn v-if="isYearlyMode" outline min :disabled="!hasYearlyData || activeLoading || exporting" @click="openYearlyExportPreview">
-          {{ yearlyPreviewBtnText }}
-        </base-btn>
         <base-btn outline min :disabled="activeLoading || rebuilding" @click="handleReload">{{ t('monthly_report__refresh') }}</base-btn>
-        <template v-if="isYearlyMode">
-          <base-btn outline min :disabled="activeLoading || rebuilding" @click="handleRebuildYearly">
-            {{ rebuilding ? rebuildYearlyLoadingText : rebuildYearlyText }}
-          </base-btn>
-        </template>
-        <template v-else>
+        <template v-if="!isYearlyMode">
           <base-btn outline min :disabled="activeLoading || rebuilding" @click="handleRebuildMonthly(30)">
             {{ rebuildingDays === 30 ? t('monthly_report__rebuilding') : t('monthly_report__rebuild_30') }}
           </base-btn>
@@ -81,7 +64,21 @@
     </section>
 
     <section v-else-if="isYearlyMode && hasYearlyData" :class="$style.yearlySection">
-      <ReportYearly :overview="yearlyOverview" :cards="yearlyCards" />
+      <ReportYearly
+        :overview="yearlyOverview"
+        :cards="yearlyCards"
+        :export-style="yearlyExportPosterStyle"
+        :export-style-list="yearlyPosterStyleList"
+        :exporting="exporting"
+        :loading="activeLoading"
+        :rebuilding="rebuilding"
+        :preview-text="yearlyPreviewBtnText"
+        :rebuild-text="rebuildYearlyText"
+        :rebuild-loading-text="rebuildYearlyLoadingText"
+        @update:export-style="handleYearlyPosterStyleChange"
+        @preview="openYearlyExportPreview"
+        @rebuild="handleRebuildYearly"
+      />
     </section>
 
     <section v-else-if="hasMonthlyData" :class="$style.grid">
