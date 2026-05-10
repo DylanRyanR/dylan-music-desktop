@@ -1346,7 +1346,7 @@ onBeforeUnmount(() => {
 .storyDock {
   flex: none;
   display: grid;
-  gap: 6px;
+  gap: 4px;
   padding: 0 2px;
 }
 
@@ -1588,6 +1588,10 @@ onBeforeUnmount(() => {
 
   .storyDock {
     gap: 4px;
+  }
+
+  .chapterRail {
+    display: none;
   }
 }
 
