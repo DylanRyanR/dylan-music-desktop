@@ -1,22 +1,40 @@
 <template>
   <section v-if="hasData" :class="$style.layout">
-    <header :class="$style.modeHead">
-      <p :class="$style.modeLabel">{{ text('yearly_report__story_mode_label', '展示模式') }}</p>
-      <div :class="$style.modeActions">
-        <button
-          type="button"
-          :class="[$style.modeBtn, viewMode === 'story' && $style.modeBtnActive]"
-          @click="viewMode = 'story'"
-        >
-          {{ text('yearly_report__story_mode_story', '海报流') }}
-        </button>
-        <button
-          type="button"
-          :class="[$style.modeBtn, viewMode === 'grid' && $style.modeBtnActive]"
-          @click="viewMode = 'grid'"
-        >
-          {{ text('yearly_report__story_mode_grid', '网格卡片') }}
-        </button>
+    <header :class="$style.toolbar">
+      <div :class="$style.toolbarPrimary">
+        <p :class="$style.modeLabel">{{ text('yearly_report__story_mode_label', '展示模式') }}</p>
+        <div :class="$style.modeActions">
+          <button
+            type="button"
+            :class="[$style.modeBtn, viewMode === 'grid' && $style.modeBtnActive]"
+            @click="viewMode = 'grid'"
+          >
+            {{ text('yearly_report__story_mode_grid', '数据报告') }}
+          </button>
+          <button
+            type="button"
+            :class="[$style.modeBtn, viewMode === 'story' && $style.modeBtnActive]"
+            @click="viewMode = 'story'"
+          >
+            {{ text('yearly_report__story_mode_story', '海报流') }}
+          </button>
+        </div>
+      </div>
+      <div :class="$style.toolbarSecondary">
+        <base-selection
+          :model-value="exportStyle"
+          :list="exportStyleList"
+          :class="$style.exportStyleSelection"
+          item-key="id"
+          item-name="label"
+          @update:model-value="emit('update:exportStyle', $event)"
+        />
+        <base-btn outline min :disabled="loading || exporting" @click="emit('preview')">
+          {{ previewText }}
+        </base-btn>
+        <base-btn outline min :disabled="loading || rebuilding" @click="emit('rebuild')">
+          {{ rebuilding ? rebuildLoadingText : rebuildText }}
+        </base-btn>
       </div>
     </header>
 
@@ -60,10 +78,24 @@ import { useSafeI18n } from './components/utils'
 const props = defineProps<{
   overview: LX.ReportYearly.OverviewDTO | null
   cards: LX.ReportYearly.CardsDTO | null
+  exportStyle: 'classic' | 'poster'
+  exportStyleList: Array<{ id: 'classic' | 'poster', label: string }>
+  exporting: boolean
+  loading: boolean
+  rebuilding: boolean
+  previewText: string
+  rebuildText: string
+  rebuildLoadingText: string
+}>()
+
+const emit = defineEmits<{
+  (event: 'update:exportStyle', style: string | number): void
+  (event: 'preview'): void
+  (event: 'rebuild'): void
 }>()
 
 const text = useSafeI18n()
-const viewMode = ref<'story' | 'grid'>('story')
+const viewMode = ref<'story' | 'grid'>('grid')
 
 const hasData = computed(() => !!props.overview && !!props.cards)
 
@@ -127,15 +159,25 @@ const cardsData = computed<LX.ReportYearly.CardsDTO>(() => props.cards ?? {
   gap: 12px;
 }
 
-.modeHead {
+.toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  padding: 10px 12px;
-  border-radius: 14px;
-  border: 1px solid color-mix(in srgb, var(--color-list-header-border-bottom) 66%, transparent);
-  background: color-mix(in srgb, var(--color-primary-background) 92%, rgba(255, 255, 255, .04));
+  padding: 8px 2px;
+}
+
+.toolbarPrimary,
+.toolbarSecondary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.toolbarSecondary {
+  justify-content: flex-end;
+  flex-wrap: wrap;
 }
 
 .modeLabel {
@@ -174,6 +216,10 @@ const cardsData = computed<LX.ReportYearly.CardsDTO>(() => props.cards ?? {
 .modeBtnActive {
   border-color: color-mix(in srgb, var(--color-primary) 52%, transparent);
   background: color-mix(in srgb, var(--color-primary-background-hover) 74%, rgba(255, 255, 255, .1));
+}
+
+.exportStyleSelection {
+  --selection-width: 120px;
 }
 
 .grid {
@@ -218,13 +264,23 @@ const cardsData = computed<LX.ReportYearly.CardsDTO>(() => props.cards ?? {
 }
 
 @media (max-width: 760px) {
-  .modeHead {
+  .toolbar {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .modeActions {
+  .toolbarPrimary,
+  .toolbarSecondary {
     width: 100%;
+    justify-content: flex-start;
+  }
+
+  .toolbarSecondary {
+    gap: 8px;
+  }
+
+  .modeActions {
+    flex: auto;
   }
 
   .modeBtn {
