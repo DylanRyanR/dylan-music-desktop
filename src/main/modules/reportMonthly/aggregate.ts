@@ -420,9 +420,15 @@ const buildResultFromSnapshots = (
     sessionCount += day.sessionCount
     skipCount += day.skipCount
 
-    day.songs.forEach(item => mergeSongCounter(globalSongs, item))
-    day.artists.forEach(item => mergeArtistCounter(globalArtists, item))
-    day.sources.forEach(item => mergeSourceCounter(globalSources, item))
+    day.songs.forEach(item => {
+      mergeSongCounter(globalSongs, item)
+    })
+    day.artists.forEach(item => {
+      mergeArtistCounter(globalArtists, item)
+    })
+    day.sources.forEach(item => {
+      mergeSourceCounter(globalSources, item)
+    })
     for (let i = 0; i < 24; i += 1) {
       globalHourHistogram[i] += day.hourHistogram[i] ?? 0
     }

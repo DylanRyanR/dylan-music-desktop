@@ -1,7 +1,7 @@
 import { LIST_IDS } from '@common/constants'
 import { markRaw, reactive } from '@common/utils/vueTools'
 
-type MediaListInfo = {
+interface MediaListInfo {
   id: typeof LIST_IDS.MEDIA_LIBRARY
   name: string
 }

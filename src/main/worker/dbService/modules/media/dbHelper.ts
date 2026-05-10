@@ -20,7 +20,6 @@ export const queryMediaConnections = () => {
 export const upsertMediaConnections = (connections: LX.DBService.MediaConnection[]) => {
   const db = getDB()
   const insert = createConnectionInsertStatement()
-  const update = createConnectionUpdateStatement()
   const remove = createConnectionDeleteStatement()
   db.transaction((items: LX.DBService.MediaConnection[]) => {
     for (const item of items) {

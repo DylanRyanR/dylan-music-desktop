@@ -120,10 +120,9 @@ export const getLyricInfo = async({ musicInfo, isRefresh, onToggleSource = () =>
   }
 
   try {
-    return await getOnlineOtherSourceLyricByLocal(musicInfo as unknown as LX.Music.MusicInfoLocal, isRefresh).then(({ lyricInfo, isFromCache }) => {
-      if (!isFromCache) void saveLyric(musicInfo, lyricInfo)
-      return buildLyricInfo(lyricInfo)
-    })
+    const { lyricInfo, isFromCache } = await getOnlineOtherSourceLyricByLocal(musicInfo as unknown as LX.Music.MusicInfoLocal, isRefresh)
+    if (!isFromCache) void saveLyric(musicInfo, lyricInfo)
+    return buildLyricInfo(lyricInfo)
   } catch {}
 
   onToggleSource()
