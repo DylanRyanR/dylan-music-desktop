@@ -51,6 +51,92 @@ const trimText = (text: string, maxLength: number) => {
   return `${text.slice(0, Math.max(0, maxLength - 1))}...`
 }
 
+interface YearlyPosterLayoutMetrics {
+  contentLeft: number
+  contentWidth: number
+  innerLeft: number
+  innerRight: number
+  columnGap: number
+  leftColumnWidth: number
+  rightColumnWidth: number
+  heroTop: number
+  heroHeight: number
+  middleTop: number
+  middleHeight: number
+  replayTop: number
+  replayHeight: number
+  replayListTop: number
+  replayVisibleCount: number
+  replayRowHeight: number
+  footerTop: number
+  footerHeight: number
+  favoriteRowGap: number
+  albumMissing: boolean
+}
+
+const getYearlyPosterLayoutMetrics = (cards: LX.ReportYearly.CardsDTO): YearlyPosterLayoutMetrics => {
+  const canvasHeight = 1920
+  const heroTop = 76
+  const sectionGap = 34
+  const footerGap = 28
+  const footerBottomPadding = 108
+  const contentLeft = 58
+  const contentWidth = 964
+  const innerLeft = 92
+  const innerRight = 988
+  const columnGap = 24
+  const leftColumnWidth = 560
+  const rightColumnWidth = contentWidth - (innerLeft - contentLeft) * 2 - leftColumnWidth - columnGap
+
+  const albumMissing = !cards.yearFavorites.album.albumName && !cards.yearFavorites.album.artistName
+  const replayVisibleCount = Math.min(Math.max(cards.replaySongs.length, 1), 6)
+
+  const heroHeight = 340
+  const middleHeight = albumMissing ? 332 : 364
+  const replayRowHeight = replayVisibleCount <= 2 ? 110 : replayVisibleCount >= 6 ? 98 : 104
+  const replayHeaderHeight = 118
+  const replayBodyHeight = replayVisibleCount * replayRowHeight
+  const replayHeightBase = replayHeaderHeight + replayBodyHeight + 48
+  const footerHeight = replayVisibleCount <= 2 ? 144 : replayVisibleCount >= 5 ? 118 : 132
+
+  const middleTop = heroTop + heroHeight + sectionGap
+  const replayTop = middleTop + middleHeight + sectionGap
+  const replayHeight = Math.max(
+    replayHeightBase,
+    canvasHeight - footerBottomPadding - footerHeight - footerGap - replayTop,
+  )
+  const footerTop = replayTop + replayHeight + footerGap
+
+  const replayBodyAvailable = replayHeight - replayHeaderHeight - 40
+  const replayListTop = replayTop + replayHeaderHeight + Math.max(
+    24,
+    Math.floor((replayBodyAvailable - replayBodyHeight) / 2),
+  )
+
+  return {
+    contentLeft,
+    contentWidth,
+    innerLeft,
+    innerRight,
+    columnGap,
+    leftColumnWidth,
+    rightColumnWidth,
+    heroTop,
+    heroHeight,
+    middleTop,
+    middleHeight,
+    replayTop,
+    replayHeight,
+    replayListTop,
+    replayVisibleCount,
+    replayRowHeight,
+    footerTop,
+    footerHeight,
+    favoriteRowGap: middleHeight <= 340 ? 88 : 96,
+    albumMissing,
+  }
+}
+
 const drawRoundedRect = (
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -214,22 +300,29 @@ const drawYearlyPoster = (overview: LX.ReportYearly.OverviewDTO, cards: LX.Repor
     ctx.fillRect(x, y, 110, 110)
   }
 
-  const heroTop = 76
-  const heroHeight = 360
-  const middleTop = heroTop + heroHeight + 34
-  const middleHeight = 360
-  const replayTop = middleTop + middleHeight + 34
-  const replayHeight = 760
-  const footerTop = replayTop + replayHeight + 28
-  const footerHeight = 128
-
-  const contentLeft = 58
-  const contentWidth = 964
-  const innerLeft = 92
-  const innerRight = 988
-  const columnGap = 24
-  const leftColumnWidth = 560
-  const rightColumnWidth = contentWidth - (innerLeft - contentLeft) * 2 - leftColumnWidth - columnGap
+  const {
+    contentLeft,
+    contentWidth,
+    innerLeft,
+    innerRight,
+    columnGap,
+    leftColumnWidth,
+    rightColumnWidth,
+    heroTop,
+    heroHeight,
+    middleTop,
+    middleHeight,
+    replayTop,
+    replayHeight,
+    replayListTop,
+    replayVisibleCount,
+    replayRowHeight,
+    footerTop,
+    footerHeight,
+    favoriteRowGap,
+    albumMissing,
+  } = getYearlyPosterLayoutMetrics(cards)
+  const generatedAt = new Date().toLocaleString()
 
   fillGlassCard(ctx, contentLeft, heroTop, contentWidth, heroHeight, 34)
 
@@ -262,36 +355,36 @@ const drawYearlyPoster = (overview: LX.ReportYearly.OverviewDTO, cards: LX.Repor
   const topSong = cards.yearFavorites.song
   const topArtist = cards.yearFavorites.artist
   const topAlbum = cards.yearFavorites.album
-  const favoriteRows = [
+  const favoriteRows: Array<[string, string, string]> = [
     [
       resolveI18n('yearly_report__top_song', 'Top Song'),
-      trimText(topSong.songName || resolveI18n('monthly_report__no_data', 'No Data'), 24),
-      trimText(topSong.artistName || resolveI18n('monthly_report__no_data', 'No Data'), 20),
+      trimText(topSong.songName || resolveI18n('monthly_report__no_data', 'No Data'), albumMissing ? 26 : 24),
+      trimText(topSong.artistName || resolveI18n('monthly_report__no_data', 'No Data'), albumMissing ? 22 : 20),
     ],
     [
       resolveI18n('yearly_report__top_artist', 'Top Artist'),
-      trimText(topArtist.artistName || resolveI18n('monthly_report__no_data', 'No Data'), 24),
+      trimText(topArtist.artistName || resolveI18n('monthly_report__no_data', 'No Data'), albumMissing ? 26 : 24),
       `${topArtist.count}x / ${formatDuration(topArtist.seconds)}`,
     ],
     [
       resolveI18n('yearly_report__top_album', 'Top Album'),
-      trimText(topAlbum.albumName || resolveI18n('monthly_report__no_data', 'No Data'), 24),
-      trimText(`${topAlbum.artistName || resolveI18n('monthly_report__no_data', 'No Data')} / ${topAlbum.count}x`, 28),
+      trimText(topAlbum.albumName || resolveI18n('monthly_report__no_data', 'No Data'), albumMissing ? 20 : 24),
+      trimText(`${topAlbum.artistName || resolveI18n('monthly_report__no_data', 'No Data')} / ${topAlbum.count}x`, albumMissing ? 24 : 28),
     ],
   ]
 
-  let favoriteY = middleTop + 134
+  let favoriteY = middleTop + 126
   for (const [label, main, sub] of favoriteRows) {
     ctx.fillStyle = 'rgba(232, 242, 255, .66)'
     ctx.font = '500 24px "Segoe UI", "PingFang SC", sans-serif'
     ctx.fillText(label, innerLeft, favoriteY)
     ctx.fillStyle = '#ffffff'
     ctx.font = '700 34px "Segoe UI", "PingFang SC", sans-serif'
-    ctx.fillText(main, innerLeft, favoriteY + 42)
+    ctx.fillText(main, innerLeft, favoriteY + 40)
     ctx.fillStyle = 'rgba(232, 242, 255, .72)'
     ctx.font = '500 24px "Segoe UI", "PingFang SC", sans-serif'
-    ctx.fillText(sub, innerLeft, favoriteY + 78)
-    favoriteY += 96
+    ctx.fillText(sub, innerLeft, favoriteY + 74)
+    favoriteY += favoriteRowGap
   }
 
   let statY = middleTop + 54
@@ -313,36 +406,39 @@ const drawYearlyPoster = (overview: LX.ReportYearly.OverviewDTO, cards: LX.Repor
   ctx.font = '700 42px "Segoe UI", "PingFang SC", sans-serif'
   ctx.fillText(resolveI18n('yearly_report__poster_replay_title', 'Most Replayed'), innerLeft, replayTop + 70)
 
-  const replaySongs = cards.replaySongs.slice(0, 5)
-  let replayY = replayTop + 128
+  const replaySongs = cards.replaySongs.slice(0, replayVisibleCount)
+  const replayCardHeight = replayRowHeight - 18
+  const replayCardWidth = 900
+  let replayY = replayListTop
   replaySongs.forEach((item, index) => {
-    fillGlassCard(ctx, innerLeft - 2, replayY - 28, 900, 106, 18)
+    fillGlassCard(ctx, innerLeft - 2, replayY - 20, replayCardWidth, replayCardHeight, 18)
     ctx.fillStyle = 'rgba(255, 255, 255, .78)'
     ctx.font = '700 30px "Segoe UI", "PingFang SC", sans-serif'
-    ctx.fillText(`#${index + 1}`, innerLeft + 24, replayY + 18)
+    ctx.fillText(`#${index + 1}`, innerLeft + 24, replayY + 16)
     ctx.fillStyle = '#ffffff'
     ctx.font = '700 32px "Segoe UI", "PingFang SC", sans-serif'
-    ctx.fillText(trimText(item.songName, 28), innerLeft + 126, replayY + 14)
+    ctx.fillText(trimText(item.songName, replayVisibleCount <= 2 ? 32 : 28), innerLeft + 126, replayY + 12)
     ctx.fillStyle = 'rgba(255, 255, 255, .68)'
     ctx.font = '500 22px "Segoe UI", "PingFang SC", sans-serif'
-    ctx.fillText(trimText(item.artistName, 22), innerLeft + 126, replayY + 48)
+    ctx.fillText(trimText(item.artistName, replayVisibleCount <= 2 ? 24 : 22), innerLeft + 126, replayY + 46)
     ctx.save()
     ctx.textAlign = 'right'
-    ctx.fillText(`x${item.count} / ${formatDuration(item.seconds)}`, innerRight - 24, replayY + 48)
+    ctx.fillText(`x${item.count} / ${formatDuration(item.seconds)}`, innerRight - 24, replayY + 46)
     ctx.restore()
-    replayY += 126
+    replayY += replayRowHeight
   })
 
   fillGlassCard(ctx, contentLeft, footerTop, contentWidth, footerHeight, 24)
   ctx.fillStyle = '#ffffff'
   ctx.font = '700 32px "Segoe UI", "PingFang SC", sans-serif'
-  ctx.fillText(resolveI18n('yearly_report__story_ending_title', `${overview.year}, thanks for listening`, { year: overview.year }), innerLeft, footerTop + 48)
+  ctx.fillText(resolveI18n('yearly_report__story_ending_title', `${overview.year}, thanks for listening`, { year: overview.year }), innerLeft, footerTop + 44)
   ctx.fillStyle = 'rgba(255, 255, 255, .62)'
   ctx.font = '500 22px "Segoe UI", "PingFang SC", sans-serif'
-  ctx.fillText(resolveI18n('yearly_report__poster_generated_at', `Generated at ${new Date().toLocaleString()}`, { time: new Date().toLocaleString() }), innerLeft, footerTop + 84)
+  const footerMetaY = footerTop + Math.min(footerHeight - 22, 82)
+  ctx.fillText(resolveI18n('yearly_report__poster_generated_at', `Generated at ${generatedAt}`, { time: generatedAt }), innerLeft, footerMetaY)
   ctx.save()
   ctx.textAlign = 'right'
-  ctx.fillText(`LX Music / ${overview.year}`, innerRight - 24, footerTop + 84)
+  ctx.fillText(`LX Music / ${overview.year}`, innerRight - 24, footerMetaY)
   ctx.restore()
 
   return canvas.toDataURL('image/png')
