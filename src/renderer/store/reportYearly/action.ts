@@ -51,6 +51,30 @@ const trimText = (text: string, maxLength: number) => {
   return `${text.slice(0, Math.max(0, maxLength - 1))}...`
 }
 
+let noisePatternCanvas: HTMLCanvasElement | null = null
+const getNoisePattern = (): CanvasPattern | null => {
+  if (noisePatternCanvas) {
+    const cachedCtx = noisePatternCanvas.getContext('2d')
+    if (cachedCtx) return cachedCtx.createPattern(noisePatternCanvas, 'repeat')
+  }
+  const canvas = document.createElement('canvas')
+  canvas.width = 128
+  canvas.height = 128
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return null
+  const imageData = ctx.getImageData(0, 0, 128, 128)
+  for (let i = 0; i < imageData.data.length; i += 4) {
+    const v = Math.floor(Math.random() * 40)
+    imageData.data[i] = v
+    imageData.data[i + 1] = v
+    imageData.data[i + 2] = v
+    imageData.data[i + 3] = 255
+  }
+  ctx.putImageData(imageData, 0, 0)
+  noisePatternCanvas = canvas
+  return ctx.createPattern(canvas, 'repeat')
+}
+
 interface YearlyPosterLayoutMetrics {
   contentLeft: number
   contentWidth: number
@@ -274,30 +298,53 @@ const drawYearlyPoster = (overview: LX.ReportYearly.OverviewDTO, cards: LX.Repor
   const ctx = canvas.getContext('2d')
   if (!ctx) throw new Error('Canvas context unavailable')
 
-  const bg = ctx.createLinearGradient(0, 0, canvas.width, canvas.height)
-  bg.addColorStop(0, '#1f2937')
-  bg.addColorStop(0.45, '#1d4ed8')
-  bg.addColorStop(1, '#3b1f5f')
+  // 底色：纵向三阶渐变
+  const bg = ctx.createLinearGradient(0, 0, 0, canvas.height)
+  bg.addColorStop(0, '#0f172a')
+  bg.addColorStop(0.5, '#1e1b4b')
+  bg.addColorStop(1, '#0f172a')
   ctx.fillStyle = bg
   ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-  const haloA = ctx.createRadialGradient(820, 220, 80, 820, 220, 560)
-  haloA.addColorStop(0, 'rgba(255, 170, 120, .34)')
-  haloA.addColorStop(1, 'rgba(255, 170, 120, 0)')
-  ctx.fillStyle = haloA
+  // 液态光球 ×3
+  const orbA = ctx.createRadialGradient(820, 280, 60, 820, 280, 620)
+  orbA.addColorStop(0, 'rgba(255, 140, 80, .20)')
+  orbA.addColorStop(1, 'rgba(255, 140, 80, 0)')
+  ctx.fillStyle = orbA
   ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-  const haloB = ctx.createRadialGradient(180, 1540, 90, 180, 1540, 580)
-  haloB.addColorStop(0, 'rgba(96, 232, 255, .26)')
-  haloB.addColorStop(1, 'rgba(96, 232, 255, 0)')
-  ctx.fillStyle = haloB
+  const orbB = ctx.createRadialGradient(180, 1620, 80, 180, 1620, 540)
+  orbB.addColorStop(0, 'rgba(56, 200, 240, .15)')
+  orbB.addColorStop(1, 'rgba(56, 200, 240, 0)')
+  ctx.fillStyle = orbB
   ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-  ctx.fillStyle = 'rgba(255, 255, 255, .06)'
-  for (let i = 0; i < 24; i += 1) {
-    const x = 34 + (i % 6) * 170
-    const y = 260 + Math.floor(i / 6) * 172
-    ctx.fillRect(x, y, 110, 110)
+  const orbC = ctx.createRadialGradient(540, 960, 100, 540, 960, 500)
+  orbC.addColorStop(0, 'rgba(130, 80, 220, .10)')
+  orbC.addColorStop(1, 'rgba(130, 80, 220, 0)')
+  ctx.fillStyle = orbC
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+  // 黑胶纹理：同心圆环
+  ctx.save()
+  ctx.globalAlpha = 0.028
+  for (let r = 260; r < 1200; r += 80) {
+    ctx.beginPath()
+    ctx.arc(540, 960, r, 0, Math.PI * 2)
+    ctx.strokeStyle = 'rgba(255, 255, 255, .5)'
+    ctx.lineWidth = 1
+    ctx.stroke()
+  }
+  ctx.restore()
+
+  // 细微噪点
+  const noise = getNoisePattern()
+  if (noise) {
+    ctx.save()
+    ctx.globalAlpha = 0.04
+    ctx.fillStyle = noise
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+    ctx.restore()
   }
 
   const {
