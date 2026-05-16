@@ -101,7 +101,7 @@ interface YearlyPosterLayoutMetrics {
 const getYearlyPosterLayoutMetrics = (cards: LX.ReportYearly.CardsDTO): YearlyPosterLayoutMetrics => {
   const canvasHeight = 1920
   const heroTop = 76
-  const sectionGap = 34
+  const sectionGap = 38
   const footerGap = 28
   const footerBottomPadding = 108
   const contentLeft = 58
@@ -118,7 +118,7 @@ const getYearlyPosterLayoutMetrics = (cards: LX.ReportYearly.CardsDTO): YearlyPo
   const heroHeight = 340
   const middleHeight = albumMissing ? 332 : 364
   const replayRowHeight = replayVisibleCount <= 2 ? 110 : replayVisibleCount >= 6 ? 98 : 104
-  const replayHeaderHeight = 118
+  const replayHeaderHeight = 122
   const replayBodyHeight = replayVisibleCount * replayRowHeight
   const replayHeightBase = replayHeaderHeight + replayBodyHeight + 48
   const footerHeight = replayVisibleCount <= 2 ? 144 : replayVisibleCount >= 5 ? 118 : 132
@@ -396,11 +396,11 @@ const drawYearlyPoster = (overview: LX.ReportYearly.OverviewDTO, cards: LX.Repor
   ctx.fillText(resolveI18n('yearly_report__poster_subtitle', `${overview.year} Listening Recap`, { year: overview.year }), innerLeft, heroTop + 138)
 
   ctx.fillStyle = '#ffffff'
-  ctx.font = '700 100px "Segoe UI", "PingFang SC", sans-serif'
-  ctx.fillText(formatDuration(overview.totalListenSeconds), innerLeft, heroTop + 282)
-  ctx.font = '500 30px "Segoe UI", "PingFang SC", sans-serif'
-  ctx.fillStyle = 'rgba(255, 255, 255, .78)'
-  ctx.fillText(resolveI18n('yearly_report__poster_total_line', `Total listens ${overview.sessionCount}`, { sessions: overview.sessionCount }), innerLeft + 4, heroTop + 334)
+  ctx.font = '900 100px "DIN Alternate", "SF Mono", "Menlo", "Segoe UI", monospace'
+  ctx.fillText(formatDuration(overview.totalListenSeconds), innerLeft, heroTop + 276)
+  ctx.font = '500 26px "Segoe UI", "PingFang SC", sans-serif'
+  ctx.fillStyle = 'rgba(255, 255, 255, .68)'
+  ctx.fillText(resolveI18n('yearly_report__poster_total_line', `Total listens ${overview.sessionCount}`, { sessions: overview.sessionCount }), innerLeft + 4, heroTop + 310)
 
   const statCards: Array<{ label: string, value: string }> = [
     { label: resolveI18n('yearly_report__active_days', 'Active Days'), value: `${overview.activeDays}` },
@@ -452,15 +452,15 @@ const drawYearlyPoster = (overview: LX.ReportYearly.OverviewDTO, cards: LX.Repor
 
   let favoriteY = middleTop + 126
   for (const [label, main, sub] of favoriteRows) {
-    ctx.fillStyle = 'rgba(232, 242, 255, .66)'
-    ctx.font = '500 24px "Segoe UI", "PingFang SC", sans-serif'
+    ctx.fillStyle = 'rgba(232, 242, 255, .58)'
+    ctx.font = '500 22px "Segoe UI", "PingFang SC", sans-serif'
     ctx.fillText(label, innerLeft, favoriteY)
     ctx.fillStyle = '#ffffff'
     ctx.font = '700 34px "Segoe UI", "PingFang SC", sans-serif'
-    ctx.fillText(main, innerLeft, favoriteY + 40)
-    ctx.fillStyle = 'rgba(232, 242, 255, .72)'
+    ctx.fillText(main, innerLeft, favoriteY + 42)
+    ctx.fillStyle = 'rgba(232, 242, 255, .64)'
     ctx.font = '500 24px "Segoe UI", "PingFang SC", sans-serif'
-    ctx.fillText(sub, innerLeft, favoriteY + 74)
+    ctx.fillText(sub, innerLeft, favoriteY + 76)
     favoriteY += favoriteRowGap
   }
 
@@ -474,7 +474,7 @@ const drawYearlyPoster = (overview: LX.ReportYearly.OverviewDTO, cards: LX.Repor
     ctx.fillStyle = '#ffffff'
     ctx.font = '700 36px "Segoe UI", "PingFang SC", sans-serif'
     ctx.fillText(item.value, statX + 20, statY + 68)
-    statY += 106
+    statY += 100
   }
 
   // Section divider: Middle → Replay
@@ -505,14 +505,14 @@ const drawYearlyPoster = (overview: LX.ReportYearly.OverviewDTO, cards: LX.Repor
   replaySongs.forEach((item, index) => {
     fillGlassCard(ctx, innerLeft - 2, replayY - 20, replayCardWidth, replayCardHeight, 18)
     ctx.fillStyle = 'rgba(255, 255, 255, .78)'
-    ctx.font = '700 30px "Segoe UI", "PingFang SC", sans-serif'
-    ctx.fillText(`#${index + 1}`, innerLeft + 24, replayY + 16)
+    ctx.font = '700 28px "DIN Alternate", "SF Mono", "Menlo", monospace'
+    ctx.fillText(`#${String(index + 1).padStart(2, '0')}`, innerLeft + 24, replayY + 16)
     ctx.fillStyle = '#ffffff'
     ctx.font = '700 32px "Segoe UI", "PingFang SC", sans-serif'
-    ctx.fillText(trimText(item.songName, replayVisibleCount <= 2 ? 32 : 28), innerLeft + 126, replayY + 12)
-    ctx.fillStyle = 'rgba(255, 255, 255, .68)'
+    ctx.fillText(trimText(item.songName, replayVisibleCount <= 2 ? 32 : 28), innerLeft + 120, replayY + 12)
+    ctx.fillStyle = 'rgba(255, 255, 255, .60)'
     ctx.font = '500 22px "Segoe UI", "PingFang SC", sans-serif'
-    ctx.fillText(trimText(item.artistName, replayVisibleCount <= 2 ? 24 : 22), innerLeft + 126, replayY + 46)
+    ctx.fillText(trimText(item.artistName, replayVisibleCount <= 2 ? 24 : 22), innerLeft + 120, replayY + 46)
     ctx.save()
     ctx.textAlign = 'right'
     ctx.fillText(`x${item.count} / ${formatDuration(item.seconds)}`, innerRight - 24, replayY + 46)
@@ -539,7 +539,7 @@ const drawYearlyPoster = (overview: LX.ReportYearly.OverviewDTO, cards: LX.Repor
   ctx.fillStyle = '#ffffff'
   ctx.font = '700 32px "Segoe UI", "PingFang SC", sans-serif'
   ctx.fillText(resolveI18n('yearly_report__story_ending_title', `${overview.year}, thanks for listening`, { year: overview.year }), innerLeft, footerTop + 44)
-  ctx.fillStyle = 'rgba(255, 255, 255, .62)'
+  ctx.fillStyle = 'rgba(255, 255, 255, .55)'
   ctx.font = '500 22px "Segoe UI", "PingFang SC", sans-serif'
   const footerMetaY = footerTop + Math.min(footerHeight - 22, 82)
   ctx.fillText(resolveI18n('yearly_report__poster_generated_at', `Generated at ${generatedAt}`, { time: generatedAt }), innerLeft, footerMetaY)
