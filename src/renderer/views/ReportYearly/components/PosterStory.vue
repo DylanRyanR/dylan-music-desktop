@@ -46,16 +46,12 @@
           :data-theme="page.theme"
           :style="{
             '--page-gradient': page.gradient,
-            '--page-ink': page.theme === 'dark' ? '#f3f7ff' : '#091629',
-            '--page-ink-soft': page.theme === 'dark' ? 'rgba(243, 247, 255, .78)' : 'rgba(9, 22, 41, .76)',
-            '--panel-bg': page.theme === 'dark' ? 'rgba(15, 27, 52, .52)' : 'rgba(255, 255, 255, .58)',
-            '--panel-stroke': page.theme === 'dark' ? 'rgba(194, 215, 255, .24)' : 'rgba(9, 22, 41, .08)',
           }"
         >
           <div :class="$style.pageBackdrop" />
           <ul :class="$style.pageOrnaments" aria-hidden="true">
             <li
-              v-for="(ornament, ornamentIndex) in getPageOrnaments(pageIndex)"
+              v-for="(ornament, ornamentIndex) in getPageOrnaments(pageIndex, pages.length)"
               :key="`${page.key}-${ornamentIndex}`"
               :class="$style.pageOrnament"
               :style="{
@@ -63,7 +59,9 @@
                 left: ornament.left,
                 width: `${ornament.size}px`,
                 height: `${ornament.size}px`,
-                opacity: `${ornament.alpha}`,
+                opacity: ornament.alpha,
+                background: ornament.hue.replace('VAR', '1'),
+                filter: `blur(${ornament.blur}px)`,
               }"
             />
           </ul>
@@ -352,27 +350,27 @@ interface OrnamentSeed {
   left: string
   size: number
   alpha: number
+  blur: number
+  hue: string
 }
 
-const ornamentSets: OrnamentSeed[][] = [
-  [
-    { top: '9%', left: '76%', size: 88, alpha: 0.28 },
-    { top: '68%', left: '10%', size: 132, alpha: 0.18 },
-    { top: '78%', left: '78%', size: 74, alpha: 0.2 },
-  ],
-  [
-    { top: '12%', left: '82%', size: 96, alpha: 0.22 },
-    { top: '62%', left: '14%', size: 148, alpha: 0.16 },
-    { top: '76%', left: '66%', size: 82, alpha: 0.18 },
-  ],
-  [
-    { top: '10%', left: '70%', size: 92, alpha: 0.26 },
-    { top: '66%', left: '8%', size: 126, alpha: 0.17 },
-    { top: '74%', left: '84%', size: 76, alpha: 0.2 },
-  ],
+const ornamentHueSets: string[][] = [
+  ['rgba(249, 115, 22, VAR)', 'rgba(251, 146, 60, VAR)', 'rgba(252, 211, 77, VAR)'],
+  ['rgba(34, 211, 168, VAR)', 'rgba(52, 211, 153, VAR)', 'rgba(110, 231, 183, VAR)'],
+  ['rgba(56, 189, 248, VAR)', 'rgba(96, 165, 250, VAR)', 'rgba(147, 197, 253, VAR)'],
+  ['rgba(129, 140, 248, VAR)', 'rgba(167, 139, 250, VAR)', 'rgba(196, 181, 253, VAR)'],
+  ['rgba(244, 114, 182, VAR)', 'rgba(251, 113, 133, VAR)', 'rgba(252, 165, 165, VAR)'],
 ]
 
-const getPageOrnaments = (pageIndex: number) => ornamentSets[pageIndex % ornamentSets.length]
+const getPageOrnaments = (pageIndex: number, totalPages: number): OrnamentSeed[] => {
+  const hueSet = ornamentHueSets[pageIndex % ornamentHueSets.length]
+  const t = totalPages > 1 ? pageIndex / (totalPages - 1) : 0.5
+  return [
+    { top: `${18 + (t * 14) % 18}%`, left: `${68 + (t * 10) % 16}%`, size: 260, alpha: 0.14, blur: 80, hue: hueSet[0] },
+    { top: `${54 + (t * 18) % 14}%`, left: `${14 + (t * 12) % 12}%`, size: 170, alpha: 0.11, blur: 60, hue: hueSet[1] },
+    { top: `${72 + (t * 12) % 14}%`, left: `${78 - (t * 8) % 12}%`, size: 80, alpha: 0.09, blur: 40, hue: hueSet[2] },
+  ]
+}
 
 const pages = computed<StoryPage[]>(() => {
   const now = Date.now()
@@ -403,8 +401,8 @@ const pages = computed<StoryPage[]>(() => {
       eyebrow: text('yearly_report', '年度报告'),
       title: text('yearly_report__story_cover_title', `${year} 听歌旅程回顾`, { year }),
       subtitle: text('yearly_report__story_cover_subtitle', '像海报一样，一页页重走你的音乐一年'),
-      gradient: 'linear-gradient(135deg, #ff8a6b 0%, #ffcb6b 48%, #ffe8b1 100%)',
-      theme: 'light',
+      gradient: 'radial-gradient(circle at 30% 20%, #2a1814 0%, #1c1210 60%, #140c0a 100%)',
+      theme: 'dark',
       insight: text('yearly_report__story_cover_insight', '每一页都来自你真实的播放记录。'),
       heroValue: `${daysSinceFirstYear.toLocaleString()}`,
       heroLabel: text('yearly_report__story_days', '天音乐陪伴'),
@@ -417,8 +415,8 @@ const pages = computed<StoryPage[]>(() => {
       eyebrow: text('yearly_report__story_chapter_overview', '年度总览'),
       title: text('yearly_report__story_kpi_title', '这一年你听了多少'),
       subtitle: text('yearly_report__story_kpi_subtitle', '总时长、总播放、活跃天数'),
-      gradient: 'linear-gradient(135deg, #58a6ff 0%, #80d0ff 45%, #d2ecff 100%)',
-      theme: 'light',
+      gradient: 'radial-gradient(circle at 70% 30%, #2a1a12 0%, #1c1210 60%, #140c0a 100%)',
+      theme: 'dark',
       insight: text('yearly_report__story_kpi_insight', '这是你一年音乐能量的核心读数。'),
       metrics: [
         { label: text('monthly_report__total_time', '总时长'), value: formatDuration(props.overview.totalListenSeconds) },
@@ -433,8 +431,8 @@ const pages = computed<StoryPage[]>(() => {
       eyebrow: text('yearly_report__story_chapter_discovery', '探索偏好'),
       title: text('yearly_report__story_freshness_title', '你有多爱发现新音乐'),
       subtitle: text('yearly_report__story_freshness_subtitle', '新歌、新歌手占比'),
-      gradient: 'linear-gradient(135deg, #67c58f 0%, #85e1ad 45%, #d4f8e1 100%)',
-      theme: 'light',
+      gradient: 'radial-gradient(circle at 25% 25%, #142420 0%, #0f1a1a 60%, #0a1313 100%)',
+      theme: 'dark',
       insight: text('yearly_report__story_freshness_insight', '新鲜度越高，代表你越常主动走出舒适区。'),
       items: [
         {
@@ -456,8 +454,8 @@ const pages = computed<StoryPage[]>(() => {
       eyebrow: text('yearly_report__story_chapter_favorites', '年度最爱'),
       title: text('yearly_report__story_favorites_title', '你最常回到这些声音'),
       subtitle: text('yearly_report__story_favorites_subtitle', '歌曲 / 歌手 / 专辑'),
-      gradient: 'linear-gradient(135deg, #b58cff 0%, #d1a5ff 45%, #f0ddff 100%)',
-      theme: 'light',
+      gradient: 'radial-gradient(circle at 70% 35%, #1a201e 0%, #0f1a1a 60%, #0a1313 100%)',
+      theme: 'dark',
       insight: text('yearly_report__story_favorites_insight', '这是你最稳定、最有记忆点的听歌偏好。'),
       items: [
         {
@@ -484,8 +482,8 @@ const pages = computed<StoryPage[]>(() => {
       eyebrow: text('yearly_report__story_chapter_season', '四季偏爱'),
       title: text('yearly_report__story_season_title', '你的春夏秋冬播放列表'),
       subtitle: text('yearly_report__story_season_subtitle', '每个季节最常听的一首'),
-      gradient: 'linear-gradient(135deg, #ffa26b 0%, #ffc48f 45%, #ffe5c8 100%)',
-      theme: 'light',
+      gradient: 'radial-gradient(circle at 30% 25%, #152838 0%, #0f1c2e 60%, #0a1522 100%)',
+      theme: 'dark',
       insight: text('yearly_report__story_season_insight', '同一首歌，在不同季节会有不同情绪。'),
       items: props.cards.seasonalFavorites.map((item: LX.ReportYearly.SeasonalFavoriteItem) => ({
         label: seasonalLabelMap[item.season] || item.season,
@@ -500,8 +498,8 @@ const pages = computed<StoryPage[]>(() => {
       eyebrow: text('yearly_report__story_chapter_habit', '听歌习惯'),
       title: text('yearly_report__story_weekly_title', '你最常在哪一天听歌'),
       subtitle: text('yearly_report__story_weekly_subtitle', `最活跃时段：${favoriteHourRange}`),
-      gradient: 'linear-gradient(135deg, #4db7d8 0%, #75d4eb 45%, #d3f4fb 100%)',
-      theme: 'light',
+      gradient: 'radial-gradient(circle at 65% 30%, #1a2c3a 0%, #0f1c2e 60%, #0a1522 100%)',
+      theme: 'dark',
       insight: text('yearly_report__story_weekly_insight', '你的节奏里，工作日与周末的听歌重心并不一样。'),
       items: props.cards.weekdayDistribution.map((item: LX.ReportYearly.WeekdayDistributionItem) => ({
         label: weekdayLabels[item.weekday] ?? `${item.weekday}`,
@@ -516,7 +514,7 @@ const pages = computed<StoryPage[]>(() => {
       eyebrow: text('yearly_report__story_chapter_night', '夜猫子指数'),
       title: text('yearly_report__story_night_title', '当城市睡去，你还在听'),
       subtitle: text('yearly_report__story_night_subtitle', '00:00-05:00 听歌统计'),
-      gradient: 'linear-gradient(135deg, #2f3f77 0%, #3b5798 45%, #8ba4d8 100%)',
+      gradient: 'radial-gradient(circle at 35% 28%, #1c1838 0%, #13112c 60%, #0d0b20 100%)',
       theme: 'dark',
       insight: text('yearly_report__story_night_insight', '深夜时段的播放，通常最能反映当下心情。'),
       items: [
@@ -537,8 +535,8 @@ const pages = computed<StoryPage[]>(() => {
       eyebrow: text('yearly_report__story_chapter_replay', '反复心动'),
       title: text('yearly_report__story_replay_title', '这些歌你忍不住循环播放'),
       subtitle: text('yearly_report__story_replay_subtitle', '播放次数 >= 3'),
-      gradient: 'linear-gradient(135deg, #7f8cf7 0%, #9da7ff 45%, #dbe0ff 100%)',
-      theme: 'light',
+      gradient: 'radial-gradient(circle at 60% 25%, #201c3a 0%, #13112c 60%, #0d0b20 100%)',
+      theme: 'dark',
       insight: text('yearly_report__story_replay_insight', '反复听，不只是喜欢，更像是一种情绪回访。'),
       items: props.cards.replaySongs.slice(0, 8).map((item: LX.ReportYearly.ReplaySongItem) => ({
         main: normalizeName(item.songName, text('monthly_report__no_data', '暂无数据')),
@@ -552,8 +550,8 @@ const pages = computed<StoryPage[]>(() => {
       eyebrow: text('yearly_report__story_chapter_timeline', '歌手轨迹'),
       title: text('yearly_report__story_timeline_title', '每个月最常陪伴你的声音'),
       subtitle: text('yearly_report__story_timeline_subtitle', '按月主导歌手'),
-      gradient: 'linear-gradient(135deg, #5aa8f0 0%, #84c6ff 45%, #d8ecff 100%)',
-      theme: 'light',
+      gradient: 'radial-gradient(circle at 30% 30%, #2a1620 0%, #1e1118 60%, #160c12 100%)',
+      theme: 'dark',
       insight: text('yearly_report__story_timeline_insight', '你的歌手偏好会随月份缓慢迁移。'),
       items: props.cards.monthlyArtistTimeline.map((item: LX.ReportYearly.MonthlyArtistTimelineItem) => ({
         month: item.month,
@@ -569,8 +567,8 @@ const pages = computed<StoryPage[]>(() => {
       eyebrow: text('yearly_report__story_chapter_rank', '历年排行'),
       title: text('yearly_report__story_rank_title', '这一年在你的历年里排第几'),
       subtitle: text('yearly_report__story_rank_subtitle', '按年度总听歌时长比较'),
-      gradient: 'linear-gradient(135deg, #6f86ef 0%, #9aa9ff 45%, #dce2ff 100%)',
-      theme: 'light',
+      gradient: 'radial-gradient(circle at 65% 28%, #261820 0%, #1e1118 60%, #160c12 100%)',
+      theme: 'dark',
       insight: text('yearly_report__story_rank_insight', '这一页可以看到今年在历年中的位置变化。'),
       items: props.cards.yearlyRank.slice(0, 8).map((item: LX.ReportYearly.YearlyRankItem) => ({
         label: `${item.year}`,
@@ -585,8 +583,8 @@ const pages = computed<StoryPage[]>(() => {
       eyebrow: text('yearly_report__story_chapter_ending', '年度总结'),
       title: text('yearly_report__story_ending_title', `${year} 听歌年终回顾`, { year }),
       subtitle: text('yearly_report__story_ending_subtitle', '下一页，继续发现新的旋律'),
-      gradient: 'linear-gradient(135deg, #ff7b7b 0%, #ffab8c 45%, #ffe0cb 100%)',
-      theme: 'light',
+      gradient: 'radial-gradient(circle at 40% 25%, #2a1420 0%, #1e1118 60%, #160c12 100%)',
+      theme: 'dark',
       insight: text('yearly_report__story_ending_insight', '你的音乐轨迹还在继续，下一年会更有故事。'),
       heroValue: formatDuration(props.overview.totalListenSeconds),
       heroLabel: text('yearly_report__story_total_duration', '年度总时长'),
@@ -614,28 +612,28 @@ const activePage = computed(() => pages.value[activeIndex.value] ?? null)
 const phaseMetaMap = computed<Record<StoryPageBase['phase'], { label: string, start: string, end: string }>>(() => ({
   warmup: {
     label: text('yearly_report__story_phase_warmup', '开场'),
-    start: '#fb923c',
-    end: '#f59e0b',
+    start: '#f97316',
+    end: '#fb923c',
   },
   explore: {
     label: text('yearly_report__story_phase_explore', '探索'),
-    start: '#34d399',
-    end: '#10b981',
+    start: '#22d3a8',
+    end: '#34d399',
   },
   habit: {
     label: text('yearly_report__story_phase_habit', '习惯'),
     start: '#38bdf8',
-    end: '#3b82f6',
+    end: '#60a5fa',
   },
   deep: {
     label: text('yearly_report__story_phase_deep', '深夜'),
     start: '#818cf8',
-    end: '#6366f1',
+    end: '#a78bfa',
   },
   closure: {
     label: text('yearly_report__story_phase_closure', '收束'),
-    start: '#fb7185',
-    end: '#f97316',
+    start: '#f472b6',
+    end: '#fb7185',
   },
 }))
 const activePhaseLabel = computed(() => {
@@ -915,11 +913,11 @@ onBeforeUnmount(() => {
 }
 
 .page {
-  --page-gradient: linear-gradient(135deg, #6893ff 0%, #8db2ff 45%, #dce7ff 100%);
-  --page-ink: #091629;
-  --page-ink-soft: rgba(9, 22, 41, .76);
-  --panel-bg: rgba(255, 255, 255, .58);
-  --panel-stroke: rgba(9, 22, 41, .08);
+  --page-gradient: radial-gradient(circle at 30% 20%, #2a1814 0%, #1c1210 60%, #140c0a 100%);
+  --page-ink: #f3f7ff;
+  --page-ink-soft: rgba(243, 247, 255, .78);
+  --panel-bg: rgba(255, 255, 255, .07);
+  --panel-stroke: rgba(255, 255, 255, .10);
   position: relative;
   flex: none;
   width: 100%;
@@ -968,9 +966,8 @@ onBeforeUnmount(() => {
 .pageOrnament {
   position: absolute;
   border-radius: 999px;
-  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, .76), rgba(255, 255, 255, .18) 68%, rgba(255, 255, 255, .04) 100%);
-  filter: blur(1px);
-  animation: floatY 5.8s ease-in-out infinite;
+  pointer-events: none;
+  animation: floatY 6.4s ease-in-out infinite;
 }
 
 .pageMeta {
