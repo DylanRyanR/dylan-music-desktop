@@ -1333,7 +1333,7 @@ onBeforeUnmount(() => {
 .page[data-kind='rank'] {
   .chartRow:first-child {
     border-color: color-mix(in srgb, #f59e0b 58%, transparent);
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, #f59e0b 22%, transparent);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .10), inset 0 0 0 1px color-mix(in srgb, #f59e0b 22%, transparent);
   }
 
   .chartRow:first-child .chartBar {
