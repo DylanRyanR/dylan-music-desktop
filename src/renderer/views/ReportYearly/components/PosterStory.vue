@@ -795,8 +795,8 @@ onBeforeUnmount(() => {
 
 <style lang="less" module>
 .storyRoot {
-  --story-accent-start: #fb923c;
-  --story-accent-end: #f59e0b;
+  --story-accent-start: #f97316;
+  --story-accent-end: #fb923c;
   position: relative;
   height: 100%;
   min-height: 0;
@@ -922,13 +922,13 @@ onBeforeUnmount(() => {
   flex: none;
   width: 100%;
   min-height: 0;
-  padding: 28px 28px 22px;
+  padding: 32px 28px 24px;
   box-sizing: border-box;
   color: var(--page-ink);
   background: var(--page-gradient);
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 22px;
   overflow: hidden;
 }
 
@@ -1020,7 +1020,7 @@ onBeforeUnmount(() => {
   margin: 8px 0 0;
   font-size: clamp(24px, 3.3vw, 42px);
   line-height: 1.16;
-  font-weight: 820;
+  font-weight: 750;
 }
 
 .subtitle {
@@ -1042,10 +1042,11 @@ onBeforeUnmount(() => {
   z-index: 1;
   margin-top: 0;
   border-radius: 20px;
-  padding: 20px;
+  padding: 18px;
   background: var(--panel-bg);
   border: 1px solid var(--panel-stroke);
   backdrop-filter: blur(8px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12);
   transition: transform .46s ease, opacity .46s ease;
 }
 
@@ -1054,6 +1055,7 @@ onBeforeUnmount(() => {
   font-size: clamp(38px, 7vw, 84px);
   line-height: 1;
   font-weight: 900;
+  font-family: "DIN Alternate", "SF Mono", "Menlo", "Segoe UI", monospace;
 }
 
 .coverLabel {
@@ -1080,10 +1082,11 @@ onBeforeUnmount(() => {
 
 .metricCard {
   border-radius: 16px;
-  padding: 14px;
+  padding: 18px;
   background: var(--panel-bg);
   border: 1px solid var(--panel-stroke);
   backdrop-filter: blur(6px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12);
 }
 
 .metricLabel {
@@ -1114,6 +1117,7 @@ onBeforeUnmount(() => {
   background: var(--panel-bg);
   border: 1px solid var(--panel-stroke);
   backdrop-filter: blur(6px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .10);
 }
 
 .freshnessHeader {
@@ -1150,10 +1154,11 @@ onBeforeUnmount(() => {
 
 .listCard {
   border-radius: 16px;
-  padding: 14px;
+  padding: 18px;
   background: var(--panel-bg);
   border: 1px solid var(--panel-stroke);
   backdrop-filter: blur(6px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12);
 }
 
 .listRow {
@@ -1161,11 +1166,12 @@ onBeforeUnmount(() => {
   padding: 12px 14px;
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: 10px;
+  gap: 12px;
   align-items: center;
   background: var(--panel-bg);
   border: 1px solid var(--panel-stroke);
   backdrop-filter: blur(6px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .10);
 }
 
 .listTag {
@@ -1219,9 +1225,10 @@ onBeforeUnmount(() => {
   gap: 10px;
   align-items: center;
   border-radius: 12px;
-  padding: 10px 12px;
+  padding: 12px 14px;
   background: var(--panel-bg);
   border: 1px solid var(--panel-stroke);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .10);
 }
 
 .chartLabel {
@@ -1282,6 +1289,7 @@ onBeforeUnmount(() => {
   padding: 10px 12px;
   background: var(--panel-bg);
   border: 1px solid var(--panel-stroke);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .10);
 }
 
 .timelineMonth {
