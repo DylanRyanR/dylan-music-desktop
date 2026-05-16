@@ -921,6 +921,7 @@ onBeforeUnmount(() => {
   position: relative;
   flex: none;
   width: 100%;
+  height: 100%;
   min-height: 0;
   padding: 32px 28px 24px;
   box-sizing: border-box;
@@ -1002,7 +1003,7 @@ onBeforeUnmount(() => {
   overscroll-behavior: contain;
   scrollbar-gutter: stable both-edges;
   scrollbar-width: thin;
-  padding-right: 4px;
+  padding: 0 4px 12px 0;
   display: flex;
   flex-direction: column;
   gap: 10px;
