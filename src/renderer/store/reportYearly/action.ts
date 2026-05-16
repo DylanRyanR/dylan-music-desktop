@@ -191,25 +191,40 @@ const fillGlassCard = (
   height: number,
   radius = 24,
 ) => {
+  // 底色填充
   drawRoundedRect(ctx, x, y, width, height, radius)
-  ctx.fillStyle = 'rgba(255, 255, 255, .12)'
+  ctx.fillStyle = 'rgba(255, 255, 255, .07)'
   ctx.fill()
 
+  // 内发光渐变叠加
   ctx.save()
   drawRoundedRect(ctx, x, y, width, height, radius)
   ctx.clip()
   const shine = ctx.createLinearGradient(x, y, x + width, y + height)
-  shine.addColorStop(0, 'rgba(255, 255, 255, .24)')
-  shine.addColorStop(0.44, 'rgba(255, 255, 255, .06)')
+  shine.addColorStop(0, 'rgba(255, 255, 255, .18)')
+  shine.addColorStop(0.4, 'rgba(255, 255, 255, .04)')
   shine.addColorStop(1, 'rgba(255, 255, 255, .01)')
   ctx.fillStyle = shine
   ctx.fillRect(x, y, width, height)
   ctx.restore()
 
+  // 外边框
   drawRoundedRect(ctx, x, y, width, height, radius)
-  ctx.strokeStyle = 'rgba(255, 255, 255, .22)'
-  ctx.lineWidth = 1.4
+  ctx.strokeStyle = 'rgba(255, 255, 255, .10)'
+  ctx.lineWidth = 1
   ctx.stroke()
+
+  // 顶部高光线
+  ctx.save()
+  drawRoundedRect(ctx, x, y, width, height, radius)
+  ctx.clip()
+  ctx.strokeStyle = 'rgba(255, 255, 255, .14)'
+  ctx.lineWidth = 2
+  ctx.beginPath()
+  ctx.moveTo(x + radius, y + 1)
+  ctx.lineTo(x + width - radius, y + 1)
+  ctx.stroke()
+  ctx.restore()
 }
 
 const drawYearlyPosterClassic = (overview: LX.ReportYearly.OverviewDTO, cards: LX.ReportYearly.CardsDTO) => {
@@ -393,6 +408,21 @@ const drawYearlyPoster = (overview: LX.ReportYearly.OverviewDTO, cards: LX.Repor
     { label: resolveI18n('yearly_report__new_artist_ratio', 'New Artist Ratio'), value: formatPercent(overview.newArtistRatio) },
   ]
 
+  // Section divider: Hero → Middle
+  ctx.save()
+  const dividerY1 = middleTop - 20
+  const dividerGrad1 = ctx.createLinearGradient(contentLeft + contentWidth * 0.2, dividerY1, contentLeft + contentWidth * 0.8, dividerY1)
+  dividerGrad1.addColorStop(0, 'rgba(255, 255, 255, 0)')
+  dividerGrad1.addColorStop(0.5, 'rgba(255, 255, 255, .06)')
+  dividerGrad1.addColorStop(1, 'rgba(255, 255, 255, 0)')
+  ctx.strokeStyle = dividerGrad1
+  ctx.lineWidth = 1
+  ctx.beginPath()
+  ctx.moveTo(contentLeft + contentWidth * 0.2, dividerY1)
+  ctx.lineTo(contentLeft + contentWidth * 0.8, dividerY1)
+  ctx.stroke()
+  ctx.restore()
+
   fillGlassCard(ctx, contentLeft, middleTop, contentWidth, middleHeight, 30)
 
   ctx.fillStyle = '#ffffff'
@@ -447,6 +477,21 @@ const drawYearlyPoster = (overview: LX.ReportYearly.OverviewDTO, cards: LX.Repor
     statY += 106
   }
 
+  // Section divider: Middle → Replay
+  ctx.save()
+  const dividerY2 = replayTop - 20
+  const dividerGrad2 = ctx.createLinearGradient(contentLeft + contentWidth * 0.2, dividerY2, contentLeft + contentWidth * 0.8, dividerY2)
+  dividerGrad2.addColorStop(0, 'rgba(255, 255, 255, 0)')
+  dividerGrad2.addColorStop(0.5, 'rgba(255, 255, 255, .06)')
+  dividerGrad2.addColorStop(1, 'rgba(255, 255, 255, 0)')
+  ctx.strokeStyle = dividerGrad2
+  ctx.lineWidth = 1
+  ctx.beginPath()
+  ctx.moveTo(contentLeft + contentWidth * 0.2, dividerY2)
+  ctx.lineTo(contentLeft + contentWidth * 0.8, dividerY2)
+  ctx.stroke()
+  ctx.restore()
+
   fillGlassCard(ctx, contentLeft, replayTop, contentWidth, replayHeight, 30)
 
   ctx.fillStyle = '#ffffff'
@@ -474,6 +519,21 @@ const drawYearlyPoster = (overview: LX.ReportYearly.OverviewDTO, cards: LX.Repor
     ctx.restore()
     replayY += replayRowHeight
   })
+
+  // Section divider: Replay → Footer
+  ctx.save()
+  const dividerY3 = footerTop - 20
+  const dividerGrad3 = ctx.createLinearGradient(contentLeft + contentWidth * 0.2, dividerY3, contentLeft + contentWidth * 0.8, dividerY3)
+  dividerGrad3.addColorStop(0, 'rgba(255, 255, 255, 0)')
+  dividerGrad3.addColorStop(0.5, 'rgba(255, 255, 255, .06)')
+  dividerGrad3.addColorStop(1, 'rgba(255, 255, 255, 0)')
+  ctx.strokeStyle = dividerGrad3
+  ctx.lineWidth = 1
+  ctx.beginPath()
+  ctx.moveTo(contentLeft + contentWidth * 0.2, dividerY3)
+  ctx.lineTo(contentLeft + contentWidth * 0.8, dividerY3)
+  ctx.stroke()
+  ctx.restore()
 
   fillGlassCard(ctx, contentLeft, footerTop, contentWidth, footerHeight, 24)
   ctx.fillStyle = '#ffffff'
